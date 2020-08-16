@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "MatchingApiExample";
+option csharp_namespace = "Honememo.MatchingApiExample";
 
 package greet;
 

@@ -1,25 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿// ================================================================================================
+// <summary>
+//      Webアプリケーション初期設定用クラスソース</summary>
+//
+// <copyright file="Startup.cs">
+//      Copyright (C) 2020 Koichi Tanaka. All rights reserved.</copyright>
+// <author>
+//      Koichi Tanaka</author>
+// ================================================================================================
 
-namespace MatchingApiExample
+namespace Honememo.MatchingApiExample
 {
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
+
+    /// <summary>
+    /// Webアプリケーション初期設定用のクラスです。
+    /// </summary>
     public class Startup
     {
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        #region メソッド
+
+        /// <summary>
+        /// Webアプリケーションのサービス設定用メソッド。
+        /// </summary>
+        /// <param name="services">サービスコレクション。</param>
+        /// <remarks>設定値の登録や依存関係の登録など、アプリ初期化前の設定を行う。</remarks>
         public void ConfigureServices(IServiceCollection services)
         {
+            // gRPC設定
             services.AddGrpc();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        /// <summary>
+        /// Webアプリケーションの設定用メソッド。
+        /// </summary>
+        /// <param name="app">アプリケーションビルダー。</param>
+        /// <param name="env">ホスト環境。</param>
+        /// <remarks>初期化されたインスタンスなどを元に、アプリ起動前の設定を行う。</remarks>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -29,6 +49,7 @@ namespace MatchingApiExample
 
             app.UseRouting();
 
+            // gRPCエンドポイント設定
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGrpcService<GreeterService>();
@@ -39,5 +60,7 @@ namespace MatchingApiExample
                 });
             });
         }
+
+        #endregion
     }
 }

@@ -1,27 +1,81 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+// ================================================================================================
+// <summary>
+//      アプリケーション起動用クラスソース</summary>
+//
+// <copyright file="Program.cs">
+//      Copyright (C) 2020 Koichi Tanaka. All rights reserved.</copyright>
+// <author>
+//      Koichi Tanaka</author>
+// ================================================================================================
 
-namespace MatchingApiExample
+namespace Honememo.MatchingApiExample
 {
+    using System;
+    using System.IO;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Hosting;
+    using Serilog;
+
+    /// <summary>
+    /// アプリケーション起動時に最初に呼ばれるクラスです。
+    /// </summary>
     public class Program
     {
+        /// <summary>
+        /// アプリケーションのメインエントリポイントです。
+        /// </summary>
+        /// <param name="args">コマンドラインから指定された起動オプション。</param>
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            // ロガーを設定してWebアプリを起動する
+            // （SerilogはStartup.csだと設定できないようなので。）
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(ApplyAppConfig(new ConfigurationBuilder()).Build())
+                .CreateLogger();
+            try
+            {
+                CreateHostBuilder(args).Build().Run();
+            }
+            catch (Exception exception)
+            {
+                Log.Fatal(exception, "Host terminated unexpectedly");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
-        // Additional configuration is required to successfully run gRPC on macOS.
-        // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
+        /// <summary>
+        /// ホストビルダーを生成する。
+        /// </summary>
+        /// <param name="args">コマンドラインから指定された起動オプション。</param>
+        /// <returns>生成したWebホストビルダー。</returns>
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    ApplyAppConfig(config);
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                });
+                })
+                .UseSerilog();
+
+        /// <summary>
+        /// 設定ビルダーにアプリ用の設定を適用する。
+        /// </summary>
+        /// <param name="config">ビルダー。</param>
+        /// <returns>メソッドチェーン用のビルダー。</returns>
+        private static IConfigurationBuilder ApplyAppConfig(IConfigurationBuilder config)
+        {
+            return config
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("appsettings." + Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") + ".json", optional: true)
+                .AddEnvironmentVariables(prefix: "EXAMPLEAPP_");
+        }
     }
 }

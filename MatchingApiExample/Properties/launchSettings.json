@@ -5,7 +5,8 @@
       "launchBrowser": false,
       "applicationUrl": "https://localhost:5001",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "EXAMPLEAPP_SERILOG__WRITETO__0__ARGS__PATH": "%TEMP%\\MatchingApiExample\\app.log"
       }
     }
   }
