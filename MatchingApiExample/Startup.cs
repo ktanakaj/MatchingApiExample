@@ -52,7 +52,9 @@ namespace Honememo.MatchingApiExample
             // gRPCエンドポイント設定
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcService<GreeterService>();
+                endpoints.MapGrpcService<PlayerService>();
+                endpoints.MapGrpcService<MatchingService>();
+                endpoints.MapGrpcService<GameService>();
 
                 endpoints.MapGet("/", async context =>
                 {

@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option csharp_namespace = "Honememo.MatchingApiExample.Protos";
+
+package honememo.matching_api_example;
+
+import "google/protobuf/empty.proto";
+
+// プレイヤー関連サービス。
+service Player {
+  // プレイヤーを登録する。
+  rpc SignUp (SignUpRequest) returns (PlayerInfo);
+  // プレイヤーを認証する。
+  rpc SignIn (SignInRequest) returns (PlayerInfo);
+  // 認証中のプレイヤー情報を取得する。
+  rpc FindMe (google.protobuf.Empty) returns (PlayerInfo);
+  // 認証中のプレイヤーの情報を変更する。
+  rpc ChangeMe (ChangeMeRequest) returns (PlayerInfo);
+}
+
+// プレイヤー情報。
+message PlayerInfo {
+  // プレイヤーID。
+  int32 id = 1;
+  // プレイヤー名。
+  string name = 2;
+  // レーティング値。
+  uint32 rating = 3;
+}
+
+// プレイヤー登録の引数。
+message SignUpRequest {
+  // 端末トークン。
+  string token = 1;
+}
+
+// プレイヤー認証の引数。
+message SignInRequest {
+  // プレイヤーID。
+  int32 id = 1;
+  // 端末トークン。
+  string token = 2;
+}
+
+// プレイヤー変更の引数。
+message ChangeMeRequest {
+  // プレイヤー名。
+  string name = 1;
+  // レーティング値。
+  uint32 rating = 2;
+}

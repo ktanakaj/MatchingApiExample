@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>860b284c-64d4-4ce8-88f2-0a20b6c3eb0b</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Honememo.MatchingApiExample</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Protobuf Include="$(MSBuildThisFileDirectory)Protos\game.proto" GrpcServices="Both" />
+    <Protobuf Include="$(MSBuildThisFileDirectory)Protos\matching.proto" GrpcServices="Both" />
+    <Protobuf Include="$(MSBuildThisFileDirectory)Protos\player.proto" GrpcServices="Both" />
+  </ItemGroup>
+</Project>

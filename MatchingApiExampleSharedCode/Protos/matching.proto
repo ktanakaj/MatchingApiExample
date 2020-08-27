@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+option csharp_namespace = "Honememo.MatchingApiExample.Protos";
+
+package honememo.matching_api_example;
+
+import "google/protobuf/empty.proto";
+
+// マッチングサービス。
+service Matching {
+  // 部屋を作成する。
+  rpc CreateRoom (CreateRoomRequest) returns (CreateRoomReply);
+  // 部屋に入る。
+  rpc JoinRoom (JoinRoomRequest) returns (google.protobuf.Empty);
+  // 部屋を出る。
+  rpc LeaveRoom (google.protobuf.Empty) returns (google.protobuf.Empty);
+  // 部屋の一覧を取得する。
+  rpc FindRooms (google.protobuf.Empty) returns (FindRoomsReply);
+  // 部屋をマッチングする。
+  rpc MatchRoom (google.protobuf.Empty) returns (MatchRoomReply);
+}
+
+// 部屋の概要。
+message RoomSummary {
+  // 部屋番号。
+  uint32 no = 1;
+  // 最大人数。
+  uint32 max_players = 2;
+  // 参加人数。
+  uint32 players = 3;
+  // 部屋のレーティング。
+  uint32 rating = 4;
+}
+
+// 部屋作成の引数。
+message CreateRoomRequest {
+  // 部屋の最大人数。
+  uint32 max_players = 1;
+}
+
+// 部屋作成の戻り値。
+message CreateRoomReply {
+  // 部屋番号。
+  uint32 no = 1;
+}
+
+// 入室の引数。
+message JoinRoomRequest {
+  // 部屋番号。
+  uint32 no = 1;
+}
+
+// 部屋一覧の戻り値。
+message FindRoomsReply {
+  // 部屋の概要リスト。
+  repeated RoomSummary rooms = 1;
+  // 部屋の総数。
+  uint32 count = 2;
+}
+
+// マッチングの戻り値。
+message MatchRoomReply {
+  // 部屋番号。
+  uint32 no = 1;
+}

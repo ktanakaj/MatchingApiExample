@@ -11,9 +11,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingApiExampleClient", "MatchingApiExampleClient\MatchingApiExampleClient.csproj", "{81169E00-58CF-4041-8481-D9D7D7749688}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchingApiExampleClient", "MatchingApiExampleClient\MatchingApiExampleClient.csproj", "{81169E00-58CF-4041-8481-D9D7D7749688}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MatchingApiExampleSharedCode", "MatchingApiExampleSharedCode\MatchingApiExampleSharedCode.shproj", "{860B284C-64D4-4CE8-88F2-0A20B6C3EB0B}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		MatchingApiExampleSharedCode\MatchingApiExampleSharedCode.projitems*{81169e00-58cf-4041-8481-d9d7d7749688}*SharedItemsImports = 5
+		MatchingApiExampleSharedCode\MatchingApiExampleSharedCode.projitems*{860b284c-64d4-4ce8-88f2-0a20b6c3eb0b}*SharedItemsImports = 13
+		MatchingApiExampleSharedCode\MatchingApiExampleSharedCode.projitems*{8710e6c1-aeb5-46e3-8300-285222ae870c}*SharedItemsImports = 5
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
