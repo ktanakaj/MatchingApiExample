@@ -42,10 +42,12 @@ namespace Honememo.MatchingApiExample.Client
         private void InitializeComponent()
         {
             this.groupBoxConfig = new System.Windows.Forms.GroupBox();
+            this.buttonConnect = new System.Windows.Forms.Button();
             this.textBoxUrl = new System.Windows.Forms.TextBox();
             this.labelUrl = new System.Windows.Forms.Label();
             this.groupBoxPlayer = new System.Windows.Forms.GroupBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.buttonChangeMe = new System.Windows.Forms.Button();
+            this.textBoxRating = new System.Windows.Forms.TextBox();
             this.labelPlayerRating = new System.Windows.Forms.Label();
             this.textBoxPlayerName = new System.Windows.Forms.TextBox();
             this.labelPlayerName = new System.Windows.Forms.Label();
@@ -80,6 +82,7 @@ namespace Honememo.MatchingApiExample.Client
             // 
             this.groupBoxConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxConfig.Controls.Add(this.buttonConnect);
             this.groupBoxConfig.Controls.Add(this.textBoxUrl);
             this.groupBoxConfig.Controls.Add(this.labelUrl);
             this.groupBoxConfig.Location = new System.Drawing.Point(13, 12);
@@ -89,6 +92,18 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxConfig.TabStop = false;
             this.groupBoxConfig.Text = "環境設定";
             // 
+            // buttonConnect
+            // 
+            this.buttonConnect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonConnect.AutoSize = true;
+            this.buttonConnect.Location = new System.Drawing.Point(508, 20);
+            this.buttonConnect.Name = "buttonConnect";
+            this.buttonConnect.Size = new System.Drawing.Size(41, 25);
+            this.buttonConnect.TabIndex = 2;
+            this.buttonConnect.Text = "接続";
+            this.buttonConnect.UseVisualStyleBackColor = true;
+            this.buttonConnect.Click += new System.EventHandler(this.ButtonConnect_Click);
+            // 
             // textBoxUrl
             // 
             this.textBoxUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -96,7 +111,7 @@ namespace Honememo.MatchingApiExample.Client
             this.textBoxUrl.Location = new System.Drawing.Point(79, 22);
             this.textBoxUrl.MaxLength = 4096;
             this.textBoxUrl.Name = "textBoxUrl";
-            this.textBoxUrl.Size = new System.Drawing.Size(466, 23);
+            this.textBoxUrl.Size = new System.Drawing.Size(423, 23);
             this.textBoxUrl.TabIndex = 1;
             // 
             // labelUrl
@@ -112,7 +127,8 @@ namespace Honememo.MatchingApiExample.Client
             // 
             this.groupBoxPlayer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxPlayer.Controls.Add(this.textBox1);
+            this.groupBoxPlayer.Controls.Add(this.buttonChangeMe);
+            this.groupBoxPlayer.Controls.Add(this.textBoxRating);
             this.groupBoxPlayer.Controls.Add(this.labelPlayerRating);
             this.groupBoxPlayer.Controls.Add(this.textBoxPlayerName);
             this.groupBoxPlayer.Controls.Add(this.labelPlayerName);
@@ -123,13 +139,25 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxPlayer.TabStop = false;
             this.groupBoxPlayer.Text = "プレイヤー情報";
             // 
-            // textBox1
+            // buttonChangeMe
             // 
-            this.textBox1.Location = new System.Drawing.Point(376, 22);
-            this.textBox1.MaxLength = 5;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(49, 23);
-            this.textBox1.TabIndex = 3;
+            this.buttonChangeMe.AutoSize = true;
+            this.buttonChangeMe.Enabled = false;
+            this.buttonChangeMe.Location = new System.Drawing.Point(461, 20);
+            this.buttonChangeMe.Name = "buttonChangeMe";
+            this.buttonChangeMe.Size = new System.Drawing.Size(41, 25);
+            this.buttonChangeMe.TabIndex = 4;
+            this.buttonChangeMe.Text = "変更";
+            this.buttonChangeMe.UseVisualStyleBackColor = true;
+            this.buttonChangeMe.Click += new System.EventHandler(this.ButtonChangeMe_Click);
+            // 
+            // textBoxRating
+            // 
+            this.textBoxRating.Location = new System.Drawing.Point(376, 22);
+            this.textBoxRating.MaxLength = 5;
+            this.textBoxRating.Name = "textBoxRating";
+            this.textBoxRating.Size = new System.Drawing.Size(49, 23);
+            this.textBoxRating.TabIndex = 3;
             // 
             // labelPlayerRating
             // 
@@ -162,6 +190,7 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxCreateRoom.Controls.Add(this.buttonCreateRoom);
             this.groupBoxCreateRoom.Controls.Add(this.textBoxRoomSize);
             this.groupBoxCreateRoom.Controls.Add(this.labelRoomSize);
+            this.groupBoxCreateRoom.Enabled = false;
             this.groupBoxCreateRoom.Location = new System.Drawing.Point(13, 155);
             this.groupBoxCreateRoom.Name = "groupBoxCreateRoom";
             this.groupBoxCreateRoom.Size = new System.Drawing.Size(206, 61);
@@ -178,6 +207,7 @@ namespace Honememo.MatchingApiExample.Client
             this.buttonCreateRoom.TabIndex = 2;
             this.buttonCreateRoom.Text = "作成";
             this.buttonCreateRoom.UseVisualStyleBackColor = true;
+            this.buttonCreateRoom.Click += new System.EventHandler(this.ButtonCreateRoom_Click);
             // 
             // textBoxRoomSize
             // 
@@ -186,6 +216,7 @@ namespace Honememo.MatchingApiExample.Client
             this.textBoxRoomSize.Name = "textBoxRoomSize";
             this.textBoxRoomSize.Size = new System.Drawing.Size(52, 23);
             this.textBoxRoomSize.TabIndex = 1;
+            this.textBoxRoomSize.Text = "2";
             // 
             // labelRoomSize
             // 
@@ -201,6 +232,7 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxMatch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxMatch.Controls.Add(this.buttonMatch);
+            this.groupBoxMatch.Enabled = false;
             this.groupBoxMatch.Location = new System.Drawing.Point(233, 155);
             this.groupBoxMatch.Name = "groupBoxMatch";
             this.groupBoxMatch.Size = new System.Drawing.Size(206, 61);
@@ -217,12 +249,14 @@ namespace Honememo.MatchingApiExample.Client
             this.buttonMatch.TabIndex = 0;
             this.buttonMatch.Text = "探索";
             this.buttonMatch.UseVisualStyleBackColor = true;
+            this.buttonMatch.Click += new System.EventHandler(this.ButtonMatch_Click);
             // 
             // groupBoxList
             // 
             this.groupBoxList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxList.Controls.Add(this.listViewRoomList);
+            this.groupBoxList.Enabled = false;
             this.groupBoxList.Location = new System.Drawing.Point(455, 155);
             this.groupBoxList.Name = "groupBoxList";
             this.groupBoxList.Size = new System.Drawing.Size(117, 394);
@@ -257,6 +291,7 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxGame.Controls.Add(this.buttonLeaveRoom);
             this.groupBoxGame.Controls.Add(this.textBoxRoomNo);
             this.groupBoxGame.Controls.Add(this.labelRoomNo);
+            this.groupBoxGame.Enabled = false;
             this.groupBoxGame.Location = new System.Drawing.Point(13, 233);
             this.groupBoxGame.Name = "groupBoxGame";
             this.groupBoxGame.Size = new System.Drawing.Size(426, 316);
@@ -316,6 +351,7 @@ namespace Honememo.MatchingApiExample.Client
             this.buttonGamePaper.TabIndex = 4;
             this.buttonGamePaper.Text = "パー";
             this.buttonGamePaper.UseVisualStyleBackColor = true;
+            this.buttonGamePaper.Click += new System.EventHandler(this.ButtonGameCommand_Click);
             // 
             // buttonGameScissors
             // 
@@ -326,6 +362,7 @@ namespace Honememo.MatchingApiExample.Client
             this.buttonGameScissors.TabIndex = 3;
             this.buttonGameScissors.Text = "チョキ";
             this.buttonGameScissors.UseVisualStyleBackColor = true;
+            this.buttonGameScissors.Click += new System.EventHandler(this.ButtonGameCommand_Click);
             // 
             // buttonGameRock
             // 
@@ -336,6 +373,7 @@ namespace Honememo.MatchingApiExample.Client
             this.buttonGameRock.TabIndex = 2;
             this.buttonGameRock.Text = "グー";
             this.buttonGameRock.UseVisualStyleBackColor = true;
+            this.buttonGameRock.Click += new System.EventHandler(this.ButtonGameCommand_Click);
             // 
             // buttonLeaveRoom
             // 
@@ -347,6 +385,7 @@ namespace Honememo.MatchingApiExample.Client
             this.buttonLeaveRoom.TabIndex = 9;
             this.buttonLeaveRoom.Text = "退室";
             this.buttonLeaveRoom.UseVisualStyleBackColor = true;
+            this.buttonLeaveRoom.Click += new System.EventHandler(this.ButtonLeaveRoom_Click);
             // 
             // textBoxRoomNo
             // 
@@ -381,6 +420,8 @@ namespace Honememo.MatchingApiExample.Client
             this.MinimumSize = new System.Drawing.Size(600, 600);
             this.Name = "MainForm";
             this.Text = "じゃんけん対戦アプリ";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.groupBoxConfig.ResumeLayout(false);
             this.groupBoxConfig.PerformLayout();
             this.groupBoxPlayer.ResumeLayout(false);
@@ -404,7 +445,7 @@ namespace Honememo.MatchingApiExample.Client
         private System.Windows.Forms.GroupBox groupBoxPlayer;
         private System.Windows.Forms.TextBox textBoxPlayerName;
         private System.Windows.Forms.Label labelPlayerName;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox textBoxRating;
         private System.Windows.Forms.Label labelPlayerRating;
         private System.Windows.Forms.GroupBox groupBoxCreateRoom;
         private System.Windows.Forms.Button buttonCreateRoom;
@@ -425,6 +466,8 @@ namespace Honememo.MatchingApiExample.Client
         private System.Windows.Forms.TextBox textBoxLog;
         private System.Windows.Forms.ListView listViewMemberList;
         private System.Windows.Forms.Label labelMemberList;
+        private System.Windows.Forms.Button buttonConnect;
+        private System.Windows.Forms.Button buttonChangeMe;
     }
 }
 
