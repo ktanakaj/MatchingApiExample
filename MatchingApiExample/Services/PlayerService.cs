@@ -8,13 +8,22 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-namespace Honememo.MatchingApiExample
+namespace Honememo.MatchingApiExample.Service
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Security.Claims;
     using System.Threading.Tasks;
+    using AutoMapper;
     using Google.Protobuf.WellKnownTypes;
     using Grpc.Core;
+    using Microsoft.AspNetCore.Authentication;
+    using Microsoft.AspNetCore.Authentication.Cookies;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.Extensions.Logging;
+    using Honememo.MatchingApiExample.Exceptions;
     using Honememo.MatchingApiExample.Protos;
+    using Honememo.MatchingApiExample.Repositories;
 
     /// <summary>
     /// プレイヤー関連サービス。
@@ -28,6 +37,16 @@ namespace Honememo.MatchingApiExample
         /// </summary>
         private readonly ILogger<PlayerService> logger;
 
+        /// <summary>
+        /// AutoMapperインスタンス。
+        /// </summary>
+        private readonly IMapper mapper;
+
+        /// <summary>
+        /// プレイヤーリポジトリ。
+        /// </summary>
+        private readonly PlayerRepository playerRepository;
+
         #endregion
 
         #region コンストラクタ
@@ -36,9 +55,13 @@ namespace Honememo.MatchingApiExample
         /// 渡されたインスタンスを使用してサービスを生成する。
         /// </summary>
         /// <param name="logger">ロガー。</param>
-        public PlayerService(ILogger<PlayerService> logger)
+        /// <param name="mapper">AutoMapperインスタンス。</param>
+        /// <param name="playerRepository">プレイヤーリポジトリ。</param>
+        public PlayerService(ILogger<PlayerService> logger, IMapper mapper, PlayerRepository playerRepository)
         {
             this.logger = logger;
+            this.mapper = mapper;
+            this.playerRepository = playerRepository;
         }
 
         #endregion
@@ -53,11 +76,13 @@ namespace Honememo.MatchingApiExample
         /// <returns>登録したプレイヤー情報。</returns>
         public override async Task<PlayerInfo> SignUp(SignUpRequest request, ServerCallContext context)
         {
-            // TODO: 未実装
-            return new PlayerInfo
-            {
-                Id = 1
-            };
+            // TODO: 空チェック、重複チェック
+            var player = this.mapper.Map<Entities.Player>(request);
+            player.Name = "(empty)";
+            player.LastLogin = DateTimeOffset.UtcNow;
+            player = await this.playerRepository.Create(player);
+            await this.SignInAsync(player, context);
+            return this.mapper.Map<PlayerInfo>(player);
         }
 
         /// <summary>
@@ -68,11 +93,17 @@ namespace Honememo.MatchingApiExample
         /// <returns>認証したプレイヤー情報。</returns>
         public override async Task<PlayerInfo> SignIn(SignInRequest request, ServerCallContext context)
         {
-            // TODO: 未実装
-            return new PlayerInfo
+            // TODO: 空チェック
+            var player = await this.playerRepository.Find(request.Id);
+            if (player == null || player.Token != request.Token)
             {
-                Id = 1
-            };
+                throw new BadRequestException("Player ID or Token is not valid");
+            }
+
+            player.LastLogin = DateTimeOffset.UtcNow;
+            player = await this.playerRepository.Update(player);
+            await this.SignInAsync(player, context);
+            return this.mapper.Map<PlayerInfo>(player);
         }
 
         /// <summary>
@@ -81,13 +112,10 @@ namespace Honememo.MatchingApiExample
         /// <param name="request">空パラメータ。</param>
         /// <param name="context">実行コンテキスト。</param>
         /// <returns>取得したプレイヤー情報。</returns>
+        [Authorize]
         public override async Task<PlayerInfo> FindMe(Empty request, ServerCallContext context)
         {
-            // TODO: 未実装
-            return new PlayerInfo
-            {
-                Id = 1
-            };
+            return this.mapper.Map<PlayerInfo>(await this.playerRepository.FindOrFail(this.GetPlayerId(context)));
         }
 
         /// <summary>
@@ -96,13 +124,46 @@ namespace Honememo.MatchingApiExample
         /// <param name="request">変更するプレイヤー情報。</param>
         /// <param name="context">実行コンテキスト。</param>
         /// <returns>更新したプレイヤー情報。</returns>
+        [Authorize]
         public override async Task<PlayerInfo> ChangeMe(ChangeMeRequest request, ServerCallContext context)
         {
-            // TODO: 未実装
-            return new PlayerInfo
+            // TODO: 空チェック
+            var player = await this.playerRepository.FindOrFail(this.GetPlayerId(context));
+            this.mapper.Map(request, player);
+            return this.mapper.Map<PlayerInfo>(await this.playerRepository.Update(player));
+        }
+
+        #endregion
+
+        #region その他のメソッド
+
+        /// <summary>
+        /// 指定されたプレイヤーでサインインする。
+        /// </summary>
+        /// <param name="player">サインインするプレイヤー。</param>
+        /// <param name="context">実行コンテキスト。</param>
+        /// <returns>処理状態。</returns>
+        private async Task SignInAsync(Entities.Player player, ServerCallContext context)
+        {
+            // HTTPコンテキストの認証メソッドを呼び出す
+            // （Cookieを使うわけでは無いが、手動での認証のため便宜上Cookie扱い）
+            var claims = new List<Claim>
             {
-                Id = 1
+                new Claim(ClaimTypes.NameIdentifier, player.Id.ToString()),
             };
+            await context.GetHttpContext().SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
+        }
+
+        /// <summary>
+        /// 認証中プレイヤーのIDを取得する。
+        /// </summary>
+        /// <param name="context">実行コンテキスト。</param>
+        /// <returns>プレイヤーのID。</returns>
+        private int GetPlayerId(ServerCallContext context)
+        {
+            return int.Parse(context.GetHttpContext().User.FindFirst(ClaimTypes.NameIdentifier).Value);
         }
 
         #endregion

@@ -10,18 +10,49 @@
 
 namespace Honememo.MatchingApiExample
 {
+    using AutoMapper;
+    using Microsoft.AspNetCore.Authentication.Cookies;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Diagnostics;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
+    using Honememo.MatchingApiExample.Entities;
+    using Honememo.MatchingApiExample.Repositories;
+    using Honememo.MatchingApiExample.Service;
 
     /// <summary>
     /// Webアプリケーション初期設定用のクラスです。
     /// </summary>
     public class Startup
     {
-        #region メソッド
+        #region コンストラクタ
+
+        /// <summary>
+        /// コンストラクタ。
+        /// </summary>
+        /// <param name="configuration">アプリケーション設定。</param>
+        public Startup(IConfiguration configuration)
+        {
+            this.Configuration = configuration;
+        }
+
+        #endregion
+
+        #region プロパティ
+
+        /// <summary>
+        /// アプリケーション設定。
+        /// </summary>
+        public IConfiguration Configuration { get; }
+
+        #endregion
+
+        #region 公開メソッド
 
         /// <summary>
         /// Webアプリケーションのサービス設定用メソッド。
@@ -30,8 +61,38 @@ namespace Honememo.MatchingApiExample
         /// <remarks>設定値の登録や依存関係の登録など、アプリ初期化前の設定を行う。</remarks>
         public void ConfigureServices(IServiceCollection services)
         {
+            // マッピング設定
+            var mappingConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(new MappingProfile());
+            });
+            services.AddSingleton(mappingConfig.CreateMapper());
+
+            // DB設定
+            services.AddDbContextPool<AppDbContext>((provider, options) =>
+            {
+                options.EnableSensitiveDataLogging();
+                options.UseLoggerFactory(provider.GetService<ILoggerFactory>());
+                this.ApplyDbConfig(options, this.Configuration.GetSection("Database"));
+            });
+
             // gRPC設定
             services.AddGrpc();
+
+            // 認証設定（Cookieを使うわけでは無いが、手動での認証のため便宜上Cookie扱い）
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+            services.AddAuthorization();
+
+            // DI設定
+            services.AddScoped<IUnitOfWork>(x => x.GetRequiredService<AppDbContext>());
+            services.Scan(scan => scan
+                .FromCallingAssembly()
+                    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Repository")))
+                        .AsSelfWithInterfaces()
+                        .WithScopedLifetime()
+                    .AddClasses(classes => classes.AssignableTo<RoomRepository>())
+                        .AsSelf()
+                        .WithSingletonLifetime());
         }
 
         /// <summary>
@@ -49,6 +110,9 @@ namespace Honememo.MatchingApiExample
 
             app.UseRouting();
 
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             // gRPCエンドポイント設定
             app.UseEndpoints(endpoints =>
             {
@@ -61,6 +125,30 @@ namespace Honememo.MatchingApiExample
                     await context.Response.WriteAsync("Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
                 });
             });
+        }
+
+        #endregion
+
+        #region 内部メソッド
+
+        /// <summary>
+        /// DBオプションビルダーにDB設定値を適用する。
+        /// </summary>
+        /// <param name="builder">ビルダー。</param>
+        /// <param name="dbconf">DB設定値。</param>
+        /// <returns>メソッドチェーン用のビルダー。</returns>
+        public DbContextOptionsBuilder ApplyDbConfig(DbContextOptionsBuilder builder, IConfigurationSection dbconf)
+        {
+            // DB接続設定
+            switch (dbconf.GetValue<string>("Type")?.ToLower())
+            {
+                default:
+                    builder.UseInMemoryDatabase("AppDB");
+                    builder.ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+                    break;
+            }
+
+            return builder;
         }
 
         #endregion

@@ -8,17 +8,22 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-namespace Honememo.MatchingApiExample
+namespace Honememo.MatchingApiExample.Service
 {
+    using System.Security.Claims;
     using System.Threading.Tasks;
+    using AutoMapper;
     using Google.Protobuf.WellKnownTypes;
     using Grpc.Core;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.Extensions.Logging;
     using Honememo.MatchingApiExample.Protos;
+    using Honememo.MatchingApiExample.Repositories;
 
     /// <summary>
     /// マッチングサービス。
     /// </summary>
+    [Authorize]
     public class MatchingService : Matching.MatchingBase
     {
         #region メンバー変数
@@ -28,6 +33,21 @@ namespace Honememo.MatchingApiExample
         /// </summary>
         private readonly ILogger<MatchingService> logger;
 
+        /// <summary>
+        /// AutoMapperインスタンス。
+        /// </summary>
+        private readonly IMapper mapper;
+
+        /// <summary>
+        /// ルームリポジトリ。
+        /// </summary>
+        private readonly RoomRepository roomRepository;
+
+        /// <summary>
+        /// プレイヤーリポジトリ。
+        /// </summary>
+        private readonly PlayerRepository playerRepository;
+
         #endregion
 
         #region コンストラクタ
@@ -36,9 +56,15 @@ namespace Honememo.MatchingApiExample
         /// 渡されたインスタンスを使用してサービスを生成する。
         /// </summary>
         /// <param name="logger">ロガー。</param>
-        public MatchingService(ILogger<MatchingService> logger)
+        /// <param name="mapper">AutoMapperインスタンス。</param>
+        /// <param name="roomRepository">ルームリポジトリ。</param>
+        /// <param name="playerRepository">プレイヤーリポジトリ。</param>
+        public MatchingService(ILogger<MatchingService> logger, IMapper mapper, RoomRepository roomRepository, PlayerRepository playerRepository)
         {
             this.logger = logger;
+            this.mapper = mapper;
+            this.roomRepository = roomRepository;
+            this.playerRepository = playerRepository;
         }
 
         #endregion
@@ -53,11 +79,10 @@ namespace Honememo.MatchingApiExample
         /// <returns>作成した部屋情報。</returns>
         public override async Task<CreateRoomReply> CreateRoom(CreateRoomRequest request, ServerCallContext context)
         {
-            // TODO: 未実装
-            return new CreateRoomReply
-            {
-                No = 1
-            };
+            // TODO: 有効値チェック
+            var room = this.roomRepository.CreateRoom(request.MaxPlayers);
+            room.AddPlayer(this.GetPlayerId(context));
+            return this.mapper.Map<CreateRoomReply>(room);
         }
 
         /// <summary>
@@ -112,6 +137,20 @@ namespace Honememo.MatchingApiExample
             {
                 No = 1
             };
+        }
+
+        #endregion
+
+        #region その他のメソッド
+
+        /// <summary>
+        /// 認証中プレイヤーのIDを取得する。
+        /// </summary>
+        /// <param name="context">実行コンテキスト。</param>
+        /// <returns>プレイヤーのID。</returns>
+        private int GetPlayerId(ServerCallContext context)
+        {
+            return int.Parse(context.GetHttpContext().User.FindFirst(ClaimTypes.NameIdentifier).Value);
         }
 
         #endregion

@@ -8,17 +8,20 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-namespace Honememo.MatchingApiExample
+namespace Honememo.MatchingApiExample.Service
 {
     using System.Threading.Tasks;
+    using AutoMapper;
     using Google.Protobuf.WellKnownTypes;
     using Grpc.Core;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.Extensions.Logging;
     using Honememo.MatchingApiExample.Protos;
 
     /// <summary>
     /// ゲームサービスサービス。
     /// </summary>
+    [Authorize]
     public class GameService : Game.GameBase
     {
         #region メンバー変数
@@ -28,6 +31,11 @@ namespace Honememo.MatchingApiExample
         /// </summary>
         private readonly ILogger<GameService> logger;
 
+        /// <summary>
+        /// AutoMapperインスタンス。
+        /// </summary>
+        private readonly IMapper mapper;
+
         #endregion
 
         #region コンストラクタ
@@ -36,9 +44,11 @@ namespace Honememo.MatchingApiExample
         /// 渡されたインスタンスを使用してサービスを生成する。
         /// </summary>
         /// <param name="logger">ロガー。</param>
-        public GameService(ILogger<GameService> logger)
+        /// <param name="mapper">AutoMapperインスタンス。</param>
+        public GameService(ILogger<GameService> logger, IMapper mapper)
         {
             this.logger = logger;
+            this.mapper = mapper;
         }
 
         #endregion
