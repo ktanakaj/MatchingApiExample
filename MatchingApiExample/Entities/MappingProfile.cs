@@ -27,6 +27,9 @@ namespace Honememo.MatchingApiExample.Entities
             this.CreateMap<SignUpRequest, Player>();
             this.CreateMap<ChangeMeRequest, Player>();
             this.CreateMap<Room, CreateRoomReply>();
+            this.CreateMap<Room, MatchRoomReply>();
+            this.CreateMap<Room, RoomSummary>();
+            this.CreateMap<Room, GetRoomStatusReply>();
         }
     }
 }

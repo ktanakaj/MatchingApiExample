@@ -10,6 +10,7 @@
 
 namespace Honememo.MatchingApiExample.Service
 {
+    using System.Collections.Generic;
     using System.Security.Claims;
     using System.Threading.Tasks;
     using AutoMapper;
@@ -17,6 +18,8 @@ namespace Honememo.MatchingApiExample.Service
     using Grpc.Core;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.Extensions.Logging;
+    using Honememo.MatchingApiExample.Entities;
+    using Honememo.MatchingApiExample.Exceptions;
     using Honememo.MatchingApiExample.Protos;
     using Honememo.MatchingApiExample.Repositories;
 
@@ -43,11 +46,6 @@ namespace Honememo.MatchingApiExample.Service
         /// </summary>
         private readonly RoomRepository roomRepository;
 
-        /// <summary>
-        /// プレイヤーリポジトリ。
-        /// </summary>
-        private readonly PlayerRepository playerRepository;
-
         #endregion
 
         #region コンストラクタ
@@ -58,13 +56,11 @@ namespace Honememo.MatchingApiExample.Service
         /// <param name="logger">ロガー。</param>
         /// <param name="mapper">AutoMapperインスタンス。</param>
         /// <param name="roomRepository">ルームリポジトリ。</param>
-        /// <param name="playerRepository">プレイヤーリポジトリ。</param>
-        public MatchingService(ILogger<MatchingService> logger, IMapper mapper, RoomRepository roomRepository, PlayerRepository playerRepository)
+        public MatchingService(ILogger<MatchingService> logger, IMapper mapper, RoomRepository roomRepository)
         {
             this.logger = logger;
             this.mapper = mapper;
             this.roomRepository = roomRepository;
-            this.playerRepository = playerRepository;
         }
 
         #endregion
@@ -80,8 +76,14 @@ namespace Honememo.MatchingApiExample.Service
         public override async Task<CreateRoomReply> CreateRoom(CreateRoomRequest request, ServerCallContext context)
         {
             // TODO: 有効値チェック
-            var room = this.roomRepository.CreateRoom(request.MaxPlayers);
-            room.AddPlayer(this.GetPlayerId(context));
+            var playerId = this.GetPlayerId(context);
+            if (this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
+            {
+                throw new BadRequestException($"Player ID={playerId} is already exists in the Room No={room.No}");
+            }
+
+            room = this.roomRepository.CreateRoom(request.MaxPlayers);
+            room.AddPlayer(playerId);
             return this.mapper.Map<CreateRoomReply>(room);
         }
 
@@ -93,7 +95,12 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>空レスポンス。</returns>
         public override async Task<Empty> JoinRoom(JoinRoomRequest request, ServerCallContext context)
         {
-            // TODO: 未実装
+            if (!this.roomRepository.TryGetRoom(request.No, out Room room))
+            {
+                throw new BadRequestException($"Room No={request.No} is not found");
+            }
+
+            room.AddPlayer(this.GetPlayerId(context));
             return new Empty();
         }
 
@@ -105,7 +112,18 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>空レスポンス。</returns>
         public override async Task<Empty> LeaveRoom(Empty request, ServerCallContext context)
         {
-            // TODO: 未実装
+            var playerId = this.GetPlayerId(context);
+            if (!this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
+            {
+                return new Empty();
+            }
+
+            room.RemovePlayer(playerId);
+            if (room.PlayerIds.Count == 0)
+            {
+                this.roomRepository.RemoveRoom(room.No);
+            }
+
             return new Empty();
         }
 
@@ -117,11 +135,10 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>部屋の一覧。</returns>
         public override async Task<FindRoomsReply> FindRooms(Empty request, ServerCallContext context)
         {
-            // TODO: 未実装
-            return new FindRoomsReply
-            {
-                Count = 0,
-            };
+            var rooms = this.roomRepository.GetRooms();
+            var reply = new FindRoomsReply { Count = (uint)rooms.Count };
+            reply.Rooms.AddRange(this.mapper.Map<ICollection<RoomSummary>>(rooms));
+            return reply;
         }
 
         /// <summary>
@@ -132,11 +149,22 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>入室or作成した部屋情報。</returns>
         public override async Task<MatchRoomReply> MatchRoom(Empty request, ServerCallContext context)
         {
-            // TODO: 未実装
-            return new MatchRoomReply
+            // TODO: 仮実装。現在は空いてる先頭のルームに入れるだけ
+            var playerId = this.GetPlayerId(context);
+            var rooms = this.roomRepository.GetRooms();
+            foreach (var room in rooms)
             {
-                No = 1
-            };
+                if (!room.IsFull())
+                {
+                    room.AddPlayer(playerId);
+                    return this.mapper.Map<MatchRoomReply>(room);
+                }
+            }
+
+            // 無かったら新規作成
+            var newRoom = this.roomRepository.CreateRoom(2);
+            newRoom.AddPlayer(playerId);
+            return this.mapper.Map<MatchRoomReply>(newRoom);
         }
 
         #endregion

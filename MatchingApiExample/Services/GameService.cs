@@ -10,13 +10,17 @@
 
 namespace Honememo.MatchingApiExample.Service
 {
+    using System.Security.Claims;
     using System.Threading.Tasks;
     using AutoMapper;
     using Google.Protobuf.WellKnownTypes;
     using Grpc.Core;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.Extensions.Logging;
+    using Honememo.MatchingApiExample.Entities;
+    using Honememo.MatchingApiExample.Exceptions;
     using Honememo.MatchingApiExample.Protos;
+    using Honememo.MatchingApiExample.Repositories;
 
     /// <summary>
     /// ゲームサービスサービス。
@@ -36,6 +40,16 @@ namespace Honememo.MatchingApiExample.Service
         /// </summary>
         private readonly IMapper mapper;
 
+        /// <summary>
+        /// プレイヤーリポジトリ。
+        /// </summary>
+        private readonly PlayerRepository playerRepository;
+
+        /// <summary>
+        /// ルームリポジトリ。
+        /// </summary>
+        private readonly RoomRepository roomRepository;
+
         #endregion
 
         #region コンストラクタ
@@ -45,10 +59,14 @@ namespace Honememo.MatchingApiExample.Service
         /// </summary>
         /// <param name="logger">ロガー。</param>
         /// <param name="mapper">AutoMapperインスタンス。</param>
-        public GameService(ILogger<GameService> logger, IMapper mapper)
+        /// <param name="playerRepository">プレイヤーリポジトリ。</param>
+        /// <param name="roomRepository">ルームリポジトリ。</param>
+        public GameService(ILogger<GameService> logger, IMapper mapper, PlayerRepository playerRepository, RoomRepository roomRepository)
         {
             this.logger = logger;
             this.mapper = mapper;
+            this.playerRepository = playerRepository;
+            this.roomRepository = roomRepository;
         }
 
         #endregion
@@ -75,11 +93,33 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>入室中の部屋情報。</returns>
         public override async Task<GetRoomStatusReply> GetRoomStatus(Empty request, ServerCallContext context)
         {
-            // TODO: 未実装
-            return new GetRoomStatusReply
+            var playerId = this.GetPlayerId(context);
+            if (!this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
             {
-                No = 1
-            };
+                throw new ForbiddenException($"Player ID={playerId} is not joined any room");
+            }
+
+            var reply = this.mapper.Map<GetRoomStatusReply>(room);
+            foreach (var id in room.PlayerIds)
+            {
+                reply.Players.Add(this.mapper.Map<PlayerInfo>(await this.playerRepository.FindOrFail(id)));
+            }
+
+            return reply;
+        }
+
+        #endregion
+
+        #region その他のメソッド
+
+        /// <summary>
+        /// 認証中プレイヤーのIDを取得する。
+        /// </summary>
+        /// <param name="context">実行コンテキスト。</param>
+        /// <returns>プレイヤーのID。</returns>
+        private int GetPlayerId(ServerCallContext context)
+        {
+            return int.Parse(context.GetHttpContext().User.FindFirst(ClaimTypes.NameIdentifier).Value);
         }
 
         #endregion
