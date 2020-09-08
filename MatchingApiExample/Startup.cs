@@ -77,7 +77,10 @@ namespace Honememo.MatchingApiExample
             });
 
             // gRPC設定
-            services.AddGrpc();
+            services.AddGrpc(options =>
+            {
+                options.Interceptors.Add<ErrorHandlingInterceptor>();
+            });
 
             // 認証設定（Cookieを使うわけでは無いが、手動での認証のため便宜上Cookie扱い）
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();

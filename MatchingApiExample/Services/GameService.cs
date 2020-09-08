@@ -10,7 +10,6 @@
 
 namespace Honememo.MatchingApiExample.Service
 {
-    using System.Security.Claims;
     using System.Threading.Tasks;
     using AutoMapper;
     using Google.Protobuf.WellKnownTypes;
@@ -93,10 +92,10 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>入室中の部屋情報。</returns>
         public override async Task<GetRoomStatusReply> GetRoomStatus(Empty request, ServerCallContext context)
         {
-            var playerId = this.GetPlayerId(context);
+            var playerId = context.GetPlayerId();
             if (!this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
             {
-                throw new ForbiddenException($"Player ID={playerId} is not joined any room");
+                throw new FailedPreconditionException($"Player ID={playerId} is not joined any room");
             }
 
             var reply = this.mapper.Map<GetRoomStatusReply>(room);
@@ -106,20 +105,6 @@ namespace Honememo.MatchingApiExample.Service
             }
 
             return reply;
-        }
-
-        #endregion
-
-        #region その他のメソッド
-
-        /// <summary>
-        /// 認証中プレイヤーのIDを取得する。
-        /// </summary>
-        /// <param name="context">実行コンテキスト。</param>
-        /// <returns>プレイヤーのID。</returns>
-        private int GetPlayerId(ServerCallContext context)
-        {
-            return int.Parse(context.GetHttpContext().User.FindFirst(ClaimTypes.NameIdentifier).Value);
         }
 
         #endregion

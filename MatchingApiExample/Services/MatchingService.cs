@@ -11,7 +11,6 @@
 namespace Honememo.MatchingApiExample.Service
 {
     using System.Collections.Generic;
-    using System.Security.Claims;
     using System.Threading.Tasks;
     using AutoMapper;
     using Google.Protobuf.WellKnownTypes;
@@ -76,10 +75,10 @@ namespace Honememo.MatchingApiExample.Service
         public override async Task<CreateRoomReply> CreateRoom(CreateRoomRequest request, ServerCallContext context)
         {
             // TODO: 有効値チェック
-            var playerId = this.GetPlayerId(context);
+            var playerId = context.GetPlayerId();
             if (this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
             {
-                throw new BadRequestException($"Player ID={playerId} is already exists in the Room No={room.No}");
+                throw new AlreadyExistsException($"Player ID={playerId} is already exists in the Room No={room.No}");
             }
 
             room = this.roomRepository.CreateRoom(request.MaxPlayers);
@@ -97,10 +96,10 @@ namespace Honememo.MatchingApiExample.Service
         {
             if (!this.roomRepository.TryGetRoom(request.No, out Room room))
             {
-                throw new BadRequestException($"Room No={request.No} is not found");
+                throw new NotFoundException($"Room No={request.No} is not found");
             }
 
-            room.AddPlayer(this.GetPlayerId(context));
+            room.AddPlayer(context.GetPlayerId());
             return new Empty();
         }
 
@@ -112,7 +111,7 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>空レスポンス。</returns>
         public override async Task<Empty> LeaveRoom(Empty request, ServerCallContext context)
         {
-            var playerId = this.GetPlayerId(context);
+            var playerId = context.GetPlayerId();
             if (!this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
             {
                 return new Empty();
@@ -150,7 +149,7 @@ namespace Honememo.MatchingApiExample.Service
         public override async Task<MatchRoomReply> MatchRoom(Empty request, ServerCallContext context)
         {
             // TODO: 仮実装。現在は空いてる先頭のルームに入れるだけ
-            var playerId = this.GetPlayerId(context);
+            var playerId = context.GetPlayerId();
             var rooms = this.roomRepository.GetRooms();
             foreach (var room in rooms)
             {
@@ -165,20 +164,6 @@ namespace Honememo.MatchingApiExample.Service
             var newRoom = this.roomRepository.CreateRoom(2);
             newRoom.AddPlayer(playerId);
             return this.mapper.Map<MatchRoomReply>(newRoom);
-        }
-
-        #endregion
-
-        #region その他のメソッド
-
-        /// <summary>
-        /// 認証中プレイヤーのIDを取得する。
-        /// </summary>
-        /// <param name="context">実行コンテキスト。</param>
-        /// <returns>プレイヤーのID。</returns>
-        private int GetPlayerId(ServerCallContext context)
-        {
-            return int.Parse(context.GetHttpContext().User.FindFirst(ClaimTypes.NameIdentifier).Value);
         }
 
         #endregion

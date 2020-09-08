@@ -97,7 +97,7 @@ namespace Honememo.MatchingApiExample.Service
             var player = await this.playerRepository.Find(request.Id);
             if (player == null || player.Token != request.Token)
             {
-                throw new BadRequestException("Player ID or Token is not valid");
+                throw new InvalidArgumentException("Player ID or Token is not valid");
             }
 
             player.LastLogin = DateTimeOffset.UtcNow;
@@ -115,7 +115,7 @@ namespace Honememo.MatchingApiExample.Service
         [Authorize]
         public override async Task<PlayerInfo> FindMe(Empty request, ServerCallContext context)
         {
-            return this.mapper.Map<PlayerInfo>(await this.playerRepository.FindOrFail(this.GetPlayerId(context)));
+            return this.mapper.Map<PlayerInfo>(await this.playerRepository.FindOrFail(context.GetPlayerId()));
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace Honememo.MatchingApiExample.Service
         public override async Task<PlayerInfo> ChangeMe(ChangeMeRequest request, ServerCallContext context)
         {
             // TODO: 空チェック
-            var player = await this.playerRepository.FindOrFail(this.GetPlayerId(context));
+            var player = await this.playerRepository.FindOrFail(context.GetPlayerId());
             this.mapper.Map(request, player);
             return this.mapper.Map<PlayerInfo>(await this.playerRepository.Update(player));
         }
@@ -154,16 +154,6 @@ namespace Honememo.MatchingApiExample.Service
             await context.GetHttpContext().SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
-        }
-
-        /// <summary>
-        /// 認証中プレイヤーのIDを取得する。
-        /// </summary>
-        /// <param name="context">実行コンテキスト。</param>
-        /// <returns>プレイヤーのID。</returns>
-        private int GetPlayerId(ServerCallContext context)
-        {
-            return int.Parse(context.GetHttpContext().User.FindFirst(ClaimTypes.NameIdentifier).Value);
         }
 
         #endregion

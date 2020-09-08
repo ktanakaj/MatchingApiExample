@@ -77,7 +77,7 @@ namespace Honememo.MatchingApiExample.Repositories
             var player = await this.Find(id);
             if (player == null)
             {
-                throw new NotFoundException($"id = {id} is not found");
+                throw new NotFoundException($"id={id} is not found");
             }
 
             return player;
