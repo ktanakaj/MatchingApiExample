@@ -70,6 +70,15 @@ namespace Honememo.MatchingApiExample.Repositories
 
         #endregion
 
+        #region イベント
+
+        /// <summary>
+        /// ルーム更新イベント。
+        /// </summary>
+        public event EventHandler<Room> OnUpdated;
+
+        #endregion
+
         #region 公開メソッド
 
         /// <summary>
@@ -132,14 +141,17 @@ namespace Honememo.MatchingApiExample.Repositories
         /// <returns>作成したルーム。</returns>
         public Room CreateRoom(uint maxPlayers)
         {
+            Room room;
             lock (this.rooms)
             {
                 // リポジトリ内の管理情報と同期させるためにイベントを登録する
-                var room = new Room(this.GenerateNumber(), maxPlayers);
+                room = new Room(this.GenerateNumber(), maxPlayers);
                 room.OnUpdated += (sender, e) => this.OnRoomUpdated((Room)sender, e);
                 this.rooms[room.No] = room;
-                return room;
             }
+
+            this.OnUpdated?.Invoke(this, room);
+            return room;
         }
 
         /// <summary>
@@ -280,6 +292,9 @@ namespace Honememo.MatchingApiExample.Repositories
                     this.rooms.Remove(room.No);
                 }
             }
+
+            // イベントを伝播する
+            this.OnUpdated?.Invoke(this, room);
         }
 
         #endregion

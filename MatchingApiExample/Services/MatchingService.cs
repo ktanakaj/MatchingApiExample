@@ -10,6 +10,7 @@
 
 namespace Honememo.MatchingApiExample.Service
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using AutoMapper;
@@ -138,6 +139,34 @@ namespace Honememo.MatchingApiExample.Service
             var reply = new FindRoomsReply { Count = (uint)rooms.Count };
             reply.Rooms.AddRange(this.mapper.Map<ICollection<RoomSummary>>(rooms));
             return reply;
+        }
+
+        /// <summary>
+        /// 部屋の一覧の更新を通知させる。
+        /// </summary>
+        /// <param name="request">空パラメータ。</param>
+        /// <param name="responseStream">レスポンス用のストリーム。</param>
+        /// <param name="context">実行コンテキスト。</param>
+        /// <returns>処理状態。</returns>
+        public override async Task FireRoomsUpdated(Empty request, IServerStreamWriter<FindRoomsReply> responseStream, ServerCallContext context)
+        {
+            // 初回は普通に実行して、以後はイベントが起きたタイミングで実行
+            await responseStream.WriteAsync(await this.FindRooms(new Empty(), context));
+
+            EventHandler<Room> f = async (sender, room) =>
+            {
+                if (!context.CancellationToken.IsCancellationRequested)
+                {
+                    await responseStream.WriteAsync(await this.FindRooms(new Empty(), context));
+                }
+            };
+            this.roomRepository.OnUpdated += f;
+            while (!context.CancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(500);
+            }
+
+            this.roomRepository.OnUpdated -= f;
         }
 
         /// <summary>

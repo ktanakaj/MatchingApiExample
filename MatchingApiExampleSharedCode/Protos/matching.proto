@@ -16,6 +16,8 @@ service Matching {
   rpc LeaveRoom (google.protobuf.Empty) returns (google.protobuf.Empty);
   // 部屋の一覧を取得する。
   rpc FindRooms (google.protobuf.Empty) returns (FindRoomsReply);
+  // 部屋の一覧の更新を通知させる。
+  rpc FireRoomsUpdated (google.protobuf.Empty) returns (stream FindRoomsReply);
   // 部屋をマッチングする。
   rpc MatchRoom (google.protobuf.Empty) returns (MatchRoomReply);
 }

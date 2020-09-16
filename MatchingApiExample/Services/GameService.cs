@@ -10,6 +10,7 @@
 
 namespace Honememo.MatchingApiExample.Service
 {
+    using System;
     using System.Threading.Tasks;
     using AutoMapper;
     using Google.Protobuf.WellKnownTypes;
@@ -98,6 +99,54 @@ namespace Honememo.MatchingApiExample.Service
                 throw new FailedPreconditionException($"Player ID={playerId} is not joined any room");
             }
 
+            return await this.MakeRoomStatus(room);
+        }
+
+        /// <summary>
+        /// 部屋の情報の更新を通知させる。
+        /// </summary>
+        /// <param name="request">空パラメータ。</param>
+        /// <param name="responseStream">レスポンス用のストリーム。</param>
+        /// <param name="context">実行コンテキスト。</param>
+        /// <returns>処理状態。</returns>
+        public override async Task FireRoomUpdated(Empty request, IServerStreamWriter<GetRoomStatusReply> responseStream, ServerCallContext context)
+        {
+            var playerId = context.GetPlayerId();
+            if (!this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
+            {
+                throw new FailedPreconditionException($"Player ID={playerId} is not joined any room");
+            }
+
+            // 初回は普通に実行して、以後はイベントが起きたタイミングで実行
+            await responseStream.WriteAsync(await this.MakeRoomStatus(room));
+
+            EventHandler<Room.UpdatedEventArgs> f = async (sender, e) =>
+            {
+                if (!context.CancellationToken.IsCancellationRequested)
+                {
+                    await responseStream.WriteAsync(await this.MakeRoomStatus(room));
+                }
+            };
+            room.OnUpdated += f;
+            while (!context.CancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(500);
+            }
+
+            room.OnUpdated -= f;
+        }
+
+        #endregion
+
+        #region 内部メソッド
+
+        /// <summary>
+        /// 部屋情報の戻り値を生成する。
+        /// </summary>
+        /// <param name="room">元となるルーム。</param>
+        /// <returns>部屋情報。</returns>
+        private async Task<GetRoomStatusReply> MakeRoomStatus(Room room)
+        {
             var reply = this.mapper.Map<GetRoomStatusReply>(room);
             foreach (var id in room.PlayerIds)
             {

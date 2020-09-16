@@ -11,6 +11,7 @@
 namespace Honememo.MatchingApiExample.Client
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Forms;
     using Google.Protobuf.WellKnownTypes;
@@ -51,6 +52,16 @@ namespace Honememo.MatchingApiExample.Client
         /// ゲームサービスのクライアント。
         /// </summary>
         private Game.GameClient gameService;
+
+        /// <summary>
+        /// RoomsUpdated用のキャンセルトークンソース。
+        /// </summary>
+        private CancellationTokenSource roomsUpdatedSource;
+
+        /// <summary>
+        /// RoomUpdated用のキャンセルトークンソース。
+        /// </summary>
+        private CancellationTokenSource roomUpdatedSource;
 
         #endregion
 
@@ -142,6 +153,7 @@ namespace Honememo.MatchingApiExample.Client
         private async void ButtonCreateRoom_Click(object sender, EventArgs e)
         {
             var res = await this.matchingService.CreateRoomAsync(new CreateRoomRequest { MaxPlayers = uint.Parse(this.textBoxRoomSize.Text) });
+            this.MonitorRoomUpdated();
             this.textBoxRoomNo.Text = res.No.ToString();
             this.groupBoxPlayer.Enabled = false;
             this.groupBoxCreateRoom.Enabled = false;
@@ -158,6 +170,7 @@ namespace Honememo.MatchingApiExample.Client
         private async void ButtonMatch_Click(object sender, EventArgs e)
         {
             var res = await this.matchingService.MatchRoomAsync(new Empty());
+            this.MonitorRoomUpdated();
             this.textBoxRoomNo.Text = res.No.ToString();
             this.groupBoxPlayer.Enabled = false;
             this.groupBoxCreateRoom.Enabled = false;
@@ -173,6 +186,12 @@ namespace Honememo.MatchingApiExample.Client
         /// <param name="e">イベントパラメータ。</param>
         private async void ButtonLeaveRoom_Click(object sender, EventArgs e)
         {
+            if (this.roomUpdatedSource != null)
+            {
+                this.roomUpdatedSource.Cancel();
+                this.roomUpdatedSource = null;
+            }
+
             await this.matchingService.LeaveRoomAsync(new Empty());
             this.textBoxRoomNo.Text = string.Empty;
             this.groupBoxGame.Enabled = false;
@@ -262,6 +281,9 @@ namespace Honememo.MatchingApiExample.Client
                     this.textBoxRating.Text = res.Rating.ToString();
                 }
 
+                // ルーム更新イベントを監視する
+                this.MonitorRoomsUpdated();
+
                 this.buttonChangeMe.Enabled = true;
                 this.groupBoxCreateRoom.Enabled = true;
                 this.groupBoxMatch.Enabled = true;
@@ -285,6 +307,20 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxCreateRoom.Enabled = false;
             this.buttonChangeMe.Enabled = false;
 
+            if (this.roomUpdatedSource != null)
+            {
+                this.roomUpdatedSource.Cancel();
+                this.roomUpdatedSource = null;
+            }
+
+            if (this.roomsUpdatedSource != null)
+            {
+                this.roomsUpdatedSource.Cancel();
+                this.roomsUpdatedSource = null;
+            }
+
+            this.matchingService.LeaveRoom(new Empty());
+
             this.gameService = null;
             this.matchingService = null;
             this.playerService = null;
@@ -296,6 +332,63 @@ namespace Honememo.MatchingApiExample.Client
             }
 
             this.groupBoxConfig.Enabled = true;
+        }
+
+        /// <summary>
+        /// ルーム一覧更新イベントを監視する。
+        /// </summary>
+        private async void MonitorRoomsUpdated()
+        {
+            this.roomsUpdatedSource = new CancellationTokenSource();
+            using var call = this.matchingService.FireRoomsUpdated(new Empty());
+            try
+            {
+                await foreach (var reply in call.ResponseStream.ReadAllAsync(this.roomsUpdatedSource.Token))
+                {
+                    this.listViewRoomList.Items.Clear();
+                    foreach (var room in reply.Rooms)
+                    {
+                        // TODO: クリックイベントを設定する
+                        this.listViewRoomList.Items.Add(new ListViewItem(new string[] { room.No.ToString(), $"{room.Players}/{room.MaxPlayers}", room.Rating.ToString() }));
+                    }
+                }
+            }
+            catch (RpcException e)
+            {
+                this.listViewRoomList.Items.Clear();
+                if (e.StatusCode != StatusCode.Cancelled)
+                {
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// ルーム状態更新イベントを監視する。
+        /// </summary>
+        private async void MonitorRoomUpdated()
+        {
+            this.roomUpdatedSource = new CancellationTokenSource();
+            using var call = this.gameService.FireRoomUpdated(new Empty());
+            try
+            {
+                await foreach (var reply in call.ResponseStream.ReadAllAsync(this.roomUpdatedSource.Token))
+                {
+                    this.listViewMemberList.Items.Clear();
+                    foreach (var player in reply.Players)
+                    {
+                        this.listViewMemberList.Items.Add(new ListViewItem(player.Name));
+                    }
+                }
+            }
+            catch (RpcException e)
+            {
+                this.listViewMemberList.Items.Clear();
+                if (e.StatusCode != StatusCode.Cancelled)
+                {
+                    throw;
+                }
+            }
         }
 
         /// <summary>

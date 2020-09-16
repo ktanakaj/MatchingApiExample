@@ -59,6 +59,9 @@ namespace Honememo.MatchingApiExample.Client
             this.buttonMatch = new System.Windows.Forms.Button();
             this.groupBoxList = new System.Windows.Forms.GroupBox();
             this.listViewRoomList = new System.Windows.Forms.ListView();
+            this.columnHeaderRoomListNo = new System.Windows.Forms.ColumnHeader();
+            this.columnHeaderRoomListRating = new System.Windows.Forms.ColumnHeader();
+            this.columnHeaderRoomListPlayers = new System.Windows.Forms.ColumnHeader();
             this.groupBoxGame = new System.Windows.Forms.GroupBox();
             this.textBoxLog = new System.Windows.Forms.TextBox();
             this.listViewMemberList = new System.Windows.Forms.ListView();
@@ -193,7 +196,7 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxCreateRoom.Enabled = false;
             this.groupBoxCreateRoom.Location = new System.Drawing.Point(13, 155);
             this.groupBoxCreateRoom.Name = "groupBoxCreateRoom";
-            this.groupBoxCreateRoom.Size = new System.Drawing.Size(206, 61);
+            this.groupBoxCreateRoom.Size = new System.Drawing.Size(180, 61);
             this.groupBoxCreateRoom.TabIndex = 2;
             this.groupBoxCreateRoom.TabStop = false;
             this.groupBoxCreateRoom.Text = "部屋を作る";
@@ -233,9 +236,9 @@ namespace Honememo.MatchingApiExample.Client
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxMatch.Controls.Add(this.buttonMatch);
             this.groupBoxMatch.Enabled = false;
-            this.groupBoxMatch.Location = new System.Drawing.Point(233, 155);
+            this.groupBoxMatch.Location = new System.Drawing.Point(217, 155);
             this.groupBoxMatch.Name = "groupBoxMatch";
-            this.groupBoxMatch.Size = new System.Drawing.Size(206, 61);
+            this.groupBoxMatch.Size = new System.Drawing.Size(180, 61);
             this.groupBoxMatch.TabIndex = 3;
             this.groupBoxMatch.TabStop = false;
             this.groupBoxMatch.Text = "部屋を探す";
@@ -257,9 +260,9 @@ namespace Honememo.MatchingApiExample.Client
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxList.Controls.Add(this.listViewRoomList);
             this.groupBoxList.Enabled = false;
-            this.groupBoxList.Location = new System.Drawing.Point(455, 155);
+            this.groupBoxList.Location = new System.Drawing.Point(403, 155);
             this.groupBoxList.Name = "groupBoxList";
-            this.groupBoxList.Size = new System.Drawing.Size(117, 394);
+            this.groupBoxList.Size = new System.Drawing.Size(169, 394);
             this.groupBoxList.TabIndex = 4;
             this.groupBoxList.TabStop = false;
             this.groupBoxList.Text = "部屋一覧";
@@ -269,12 +272,32 @@ namespace Honememo.MatchingApiExample.Client
             this.listViewRoomList.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.listViewRoomList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderRoomListNo,
+            this.columnHeaderRoomListPlayers,
+            this.columnHeaderRoomListRating});
             this.listViewRoomList.HideSelection = false;
             this.listViewRoomList.Location = new System.Drawing.Point(11, 22);
             this.listViewRoomList.Name = "listViewRoomList";
-            this.listViewRoomList.Size = new System.Drawing.Size(91, 355);
+            this.listViewRoomList.Size = new System.Drawing.Size(143, 355);
             this.listViewRoomList.TabIndex = 0;
             this.listViewRoomList.UseCompatibleStateImageBehavior = false;
+            this.listViewRoomList.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeaderRoomListNo
+            // 
+            this.columnHeaderRoomListNo.Text = "番号";
+            this.columnHeaderRoomListNo.Width = 40;
+            // 
+            // columnHeaderRoomListRating
+            // 
+            this.columnHeaderRoomListRating.Text = "レーティング";
+            this.columnHeaderRoomListRating.Width = 70;
+            // 
+            // columnHeaderRoomListPlayers
+            // 
+            this.columnHeaderRoomListPlayers.Text = "人数";
+            this.columnHeaderRoomListPlayers.Width = 40;
             // 
             // groupBoxGame
             // 
@@ -294,7 +317,7 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxGame.Enabled = false;
             this.groupBoxGame.Location = new System.Drawing.Point(13, 233);
             this.groupBoxGame.Name = "groupBoxGame";
-            this.groupBoxGame.Size = new System.Drawing.Size(426, 316);
+            this.groupBoxGame.Size = new System.Drawing.Size(384, 316);
             this.groupBoxGame.TabIndex = 5;
             this.groupBoxGame.TabStop = false;
             this.groupBoxGame.Text = "ゲームプレイ";
@@ -309,7 +332,7 @@ namespace Honememo.MatchingApiExample.Client
             this.textBoxLog.Name = "textBoxLog";
             this.textBoxLog.ReadOnly = true;
             this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxLog.Size = new System.Drawing.Size(302, 238);
+            this.textBoxLog.Size = new System.Drawing.Size(260, 238);
             this.textBoxLog.TabIndex = 8;
             // 
             // listViewMemberList
@@ -322,6 +345,7 @@ namespace Honememo.MatchingApiExample.Client
             this.listViewMemberList.Size = new System.Drawing.Size(84, 156);
             this.listViewMemberList.TabIndex = 7;
             this.listViewMemberList.UseCompatibleStateImageBehavior = false;
+            this.listViewMemberList.View = System.Windows.Forms.View.List;
             // 
             // labelMemberList
             // 
@@ -335,7 +359,7 @@ namespace Honememo.MatchingApiExample.Client
             // checkBoxGameRandom
             // 
             this.checkBoxGameRandom.AutoSize = true;
-            this.checkBoxGameRandom.Location = new System.Drawing.Point(331, 31);
+            this.checkBoxGameRandom.Location = new System.Drawing.Point(314, 31);
             this.checkBoxGameRandom.Name = "checkBoxGameRandom";
             this.checkBoxGameRandom.Size = new System.Drawing.Size(61, 19);
             this.checkBoxGameRandom.TabIndex = 5;
@@ -345,7 +369,7 @@ namespace Honememo.MatchingApiExample.Client
             // buttonGamePaper
             // 
             this.buttonGamePaper.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.buttonGamePaper.Location = new System.Drawing.Point(267, 22);
+            this.buttonGamePaper.Location = new System.Drawing.Point(250, 22);
             this.buttonGamePaper.Name = "buttonGamePaper";
             this.buttonGamePaper.Size = new System.Drawing.Size(58, 31);
             this.buttonGamePaper.TabIndex = 4;
@@ -356,7 +380,7 @@ namespace Honememo.MatchingApiExample.Client
             // buttonGameScissors
             // 
             this.buttonGameScissors.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.buttonGameScissors.Location = new System.Drawing.Point(203, 22);
+            this.buttonGameScissors.Location = new System.Drawing.Point(186, 22);
             this.buttonGameScissors.Name = "buttonGameScissors";
             this.buttonGameScissors.Size = new System.Drawing.Size(58, 31);
             this.buttonGameScissors.TabIndex = 3;
@@ -367,7 +391,7 @@ namespace Honememo.MatchingApiExample.Client
             // buttonGameRock
             // 
             this.buttonGameRock.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.buttonGameRock.Location = new System.Drawing.Point(139, 22);
+            this.buttonGameRock.Location = new System.Drawing.Point(122, 22);
             this.buttonGameRock.Name = "buttonGameRock";
             this.buttonGameRock.Size = new System.Drawing.Size(58, 31);
             this.buttonGameRock.TabIndex = 2;
@@ -468,6 +492,9 @@ namespace Honememo.MatchingApiExample.Client
         private System.Windows.Forms.Label labelMemberList;
         private System.Windows.Forms.Button buttonConnect;
         private System.Windows.Forms.Button buttonChangeMe;
+        private System.Windows.Forms.ColumnHeader columnHeaderRoomListNo;
+        private System.Windows.Forms.ColumnHeader columnHeaderRoomListRating;
+        private System.Windows.Forms.ColumnHeader columnHeaderRoomListPlayers;
     }
 }
 

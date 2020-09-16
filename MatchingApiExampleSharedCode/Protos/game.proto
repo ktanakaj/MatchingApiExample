@@ -13,6 +13,8 @@ service Game {
   rpc SendCommand (SendCommandRequest) returns (google.protobuf.Empty);
   // 部屋の情報を取得する。
   rpc GetRoomStatus (google.protobuf.Empty) returns (GetRoomStatusReply);
+  // 部屋の情報の更新を通知させる。
+  rpc FireRoomUpdated (google.protobuf.Empty) returns (stream GetRoomStatusReply);
 }
 
 // コマンド送信の引数。
