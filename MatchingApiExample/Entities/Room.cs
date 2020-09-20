@@ -74,6 +74,11 @@ namespace Honememo.MatchingApiExample.Entities
         public uint MaxPlayers { get; }
 
         /// <summary>
+        /// レーティング値。
+        /// </summary>
+        public uint Rating { get; private set; }
+
+        /// <summary>
         /// ルームに入室中のプレイヤーのリスト。
         /// </summary>
         /// <remarks>
@@ -103,10 +108,10 @@ namespace Honememo.MatchingApiExample.Entities
         /// <summary>
         /// ルームにプレイヤーを入室させる。
         /// </summary>
-        /// <param name="playerId">入室するプレイヤーのID。</param>
+        /// <param name="player">入室するプレイヤー。</param>
         /// <exception cref="InvalidOperationException">既に入室済／満員の場合。</exception>
         /// <exception cref="ObjectDisposedException">ルームが破棄済みの場合。</exception>
-        public void AddPlayer(int playerId)
+        public void AddPlayer(Player player)
         {
             UpdatedEventArgs e;
             lock (this.lockObj)
@@ -118,13 +123,14 @@ namespace Honememo.MatchingApiExample.Entities
                 }
 
                 // 同一プレイヤーIDの場合に重複と判断
-                if (this.playerIds.Contains(playerId))
+                if (this.playerIds.Contains(player.Id))
                 {
-                    throw new InvalidOperationException($"Player ID={playerId} is already exists");
+                    throw new InvalidOperationException($"Player ID={player.Id} is already exists");
                 }
 
                 e = new UpdatedEventArgs(this);
-                this.playerIds.Add(playerId);
+                this.playerIds.Add(player.Id);
+                this.UpdateRating((int)player.Rating);
             }
 
             this.FireUpdatedIfNeeded(e);
@@ -133,17 +139,21 @@ namespace Honememo.MatchingApiExample.Entities
         /// <summary>
         /// ルームからプレイヤーを退室させる。
         /// </summary>
-        /// <param name=")">退室させるプレイヤーのID。</param>
+        /// <param name="player">退室させるプレイヤーのID。</param>
         /// <returns>退室した場合true、プレイヤーが存在しない場合false。</returns>
         /// <exception cref="ObjectDisposedException">ルームが破棄済みの場合。</exception>
-        public bool RemovePlayer(int playerId)
+        public bool RemovePlayer(Player player)
         {
             UpdatedEventArgs e;
             lock (this.lockObj)
             {
                 this.ThrowExceptionIfDisposed();
                 e = new UpdatedEventArgs(this);
-                if (!this.playerIds.Remove(playerId))
+                if (this.playerIds.Remove(player.Id))
+                {
+                    this.UpdateRating((int)-player.Rating);
+                }
+                else
                 {
                     e = null;
                 }
@@ -211,6 +221,36 @@ namespace Honememo.MatchingApiExample.Entities
             {
                 this.OnUpdated?.Invoke(this, e);
             }
+        }
+
+        /// <summary>
+        /// プレイヤー入退室による部屋のレーティング値を更新する。
+        /// </summary>
+        /// <param name="diff">入退室により変動したレーティング値。退室はマイナス。</param>
+        /// <remarks>
+        /// 単純に入室中のプレイヤーのレーティング値の平均を部屋のレーティング値とする。
+        /// <see cref="PlayerIds"/>を更新してから呼ぶこと。
+        /// </remarks>
+        private void UpdateRating(int diff)
+        {
+            var newPlayers = this.playerIds.Count;
+            if (newPlayers == 0)
+            {
+                this.Rating = 0;
+                return;
+            }
+
+            if (diff == 0)
+            {
+                return;
+            }
+
+            // 増減がある場合は、現在のレーティング値と人数から、元々のプレイヤーのレーティング値の合計を算出し、
+            // そこに新しい人の分を加減算して、新しい人数で割る。
+            // ※ この仕組みだと端数がずれるし、また入室後の増減も加味されないが、
+            //    別に厳密な値が必要なわけじゃないので気にしない。
+            var oldPlayers = newPlayers + (diff > 0 ? -1 : 1);
+            this.Rating = (uint)(((oldPlayers * this.Rating) + diff) / newPlayers);
         }
 
         #endregion

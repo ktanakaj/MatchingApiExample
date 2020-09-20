@@ -46,6 +46,11 @@ namespace Honememo.MatchingApiExample.Service
         /// </summary>
         private readonly RoomRepository roomRepository;
 
+        /// <summary>
+        /// プレイヤーリポジトリ。
+        /// </summary>
+        private readonly PlayerRepository playerRepository;
+
         #endregion
 
         #region コンストラクタ
@@ -56,11 +61,13 @@ namespace Honememo.MatchingApiExample.Service
         /// <param name="logger">ロガー。</param>
         /// <param name="mapper">AutoMapperインスタンス。</param>
         /// <param name="roomRepository">ルームリポジトリ。</param>
-        public MatchingService(ILogger<MatchingService> logger, IMapper mapper, RoomRepository roomRepository)
+        /// <param name="playerRepository">プレイヤーリポジトリ。</param>
+        public MatchingService(ILogger<MatchingService> logger, IMapper mapper, RoomRepository roomRepository, PlayerRepository playerRepository)
         {
             this.logger = logger;
             this.mapper = mapper;
             this.roomRepository = roomRepository;
+            this.playerRepository = playerRepository;
         }
 
         #endregion
@@ -76,14 +83,14 @@ namespace Honememo.MatchingApiExample.Service
         public override async Task<CreateRoomReply> CreateRoom(CreateRoomRequest request, ServerCallContext context)
         {
             // TODO: 有効値チェック
-            var playerId = context.GetPlayerId();
-            if (this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
+            var player = await this.playerRepository.FindOrFail(context.GetPlayerId());
+            if (this.roomRepository.TryGetRoomByPlayerId(player.Id, out Room room))
             {
-                throw new AlreadyExistsException($"Player ID={playerId} is already exists in the Room No={room.No}");
+                throw new AlreadyExistsException($"Player ID={player.Id} is already exists in the Room No={room.No}");
             }
 
             room = this.roomRepository.CreateRoom(request.MaxPlayers);
-            room.AddPlayer(playerId);
+            room.AddPlayer(player);
             return this.mapper.Map<CreateRoomReply>(room);
         }
 
@@ -100,7 +107,7 @@ namespace Honememo.MatchingApiExample.Service
                 throw new NotFoundException($"Room No={request.No} is not found");
             }
 
-            room.AddPlayer(context.GetPlayerId());
+            room.AddPlayer(await this.playerRepository.FindOrFail(context.GetPlayerId()));
             return new Empty();
         }
 
@@ -112,13 +119,13 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>空レスポンス。</returns>
         public override async Task<Empty> LeaveRoom(Empty request, ServerCallContext context)
         {
-            var playerId = context.GetPlayerId();
-            if (!this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
+            var player = await this.playerRepository.FindOrFail(context.GetPlayerId());
+            if (!this.roomRepository.TryGetRoomByPlayerId(player.Id, out Room room))
             {
                 return new Empty();
             }
 
-            room.RemovePlayer(playerId);
+            room.RemovePlayer(player);
             if (room.PlayerIds.Count == 0)
             {
                 this.roomRepository.RemoveRoom(room.No);
@@ -178,20 +185,20 @@ namespace Honememo.MatchingApiExample.Service
         public override async Task<MatchRoomReply> MatchRoom(Empty request, ServerCallContext context)
         {
             // TODO: 仮実装。現在は空いてる先頭のルームに入れるだけ
-            var playerId = context.GetPlayerId();
+            var player = await this.playerRepository.FindOrFail(context.GetPlayerId());
             var rooms = this.roomRepository.GetRooms();
             foreach (var room in rooms)
             {
                 if (!room.IsFull())
                 {
-                    room.AddPlayer(playerId);
+                    room.AddPlayer(player);
                     return this.mapper.Map<MatchRoomReply>(room);
                 }
             }
 
             // 無かったら新規作成
             var newRoom = this.roomRepository.CreateRoom(2);
-            newRoom.AddPlayer(playerId);
+            newRoom.AddPlayer(player);
             return this.mapper.Map<MatchRoomReply>(newRoom);
         }
 

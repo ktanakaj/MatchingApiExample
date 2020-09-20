@@ -43,7 +43,7 @@ namespace Honememo.MatchingApiExample.Entities
         /// <summary>
         /// レーティング値。
         /// </summary>
-        public int Rating { get; set; }
+        public uint Rating { get; set; }
 
         /// <summary>
         /// 最終ログイン日時。
