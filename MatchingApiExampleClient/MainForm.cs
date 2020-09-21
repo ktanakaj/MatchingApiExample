@@ -188,6 +188,10 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxGame.Enabled = true;
         }
 
+        #endregion
+
+        #region ゲームグループの各イベントのメソッド
+
         /// <summary>
         /// 部屋退室ボタンクリック時のイベント処理。
         /// </summary>
@@ -211,29 +215,17 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxPlayer.Enabled = true;
         }
 
-        #endregion
-
-        #region ゲームグループの各イベントのメソッド
-
         /// <summary>
-        /// ゲームコマンドボタンクリック時のイベント処理。
+        /// しりとりゲーム開始ボタンクリック時のイベント処理。
         /// </summary>
         /// <param name="sender">イベント発生元インスタンス。</param>
         /// <param name="e">イベントパラメータ。</param>
-        private async void ButtonGameCommand_Click(object sender, EventArgs e)
+        private void ButtonShiritori_Click(object sender, EventArgs e)
         {
-            var req = new SendCommandRequest();
-            req.Command = SendCommandRequest.Types.Command.Rock;
-            if (sender == this.buttonGameScissors)
+            using (var form = new ShiritoriForm())
             {
-                req.Command = SendCommandRequest.Types.Command.Scissors;
+                form.ShowDialog();
             }
-            else if (sender == this.buttonGamePaper)
-            {
-                req.Command = SendCommandRequest.Types.Command.Paper;
-            }
-
-            await this.gameService.SendCommandAsync(req);
         }
 
         #endregion
@@ -329,7 +321,10 @@ namespace Honememo.MatchingApiExample.Client
                 this.roomsUpdatedSource = null;
             }
 
-            this.matchingService.LeaveRoom(new Empty());
+            if (this.matchingService != null)
+            {
+                this.matchingService.LeaveRoom(new Empty());
+            }
 
             this.gameService = null;
             this.matchingService = null;
