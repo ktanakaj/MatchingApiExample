@@ -87,15 +87,13 @@ namespace Honememo.MatchingApiExample
             services.AddAuthorization();
 
             // DI設定
-            services.AddScoped<IUnitOfWork>(x => x.GetRequiredService<AppDbContext>());
             services.Scan(scan => scan
                 .FromCallingAssembly()
                     .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Repository")))
                         .AsSelfWithInterfaces()
-                        .WithScopedLifetime()
-                    .AddClasses(classes => classes.AssignableTo<RoomRepository>())
-                        .AsSelf()
-                        .WithSingletonLifetime());
+                        .WithScopedLifetime());
+            services.AddScoped<IUnitOfWork>(x => x.GetRequiredService<AppDbContext>());
+            services.AddSingleton<RoomRepository>();
         }
 
         /// <summary>

@@ -110,7 +110,14 @@ namespace Honememo.MatchingApiExample.Client
         {
             // 普通ならここでSettingsも保存するが、サンプルクライアントでは毎回別プレイヤーにするため保存しない。
             // 一応gRPC接続を解放する。
-            this.DisconnectServer();
+            try
+            {
+                this.DisconnectServer();
+            }
+            catch (Exception ex)
+            {
+                this.ErrorDialog(ex.ToString());
+            }
         }
 
         #endregion
@@ -152,13 +159,14 @@ namespace Honememo.MatchingApiExample.Client
         /// <param name="e">イベントパラメータ。</param>
         private async void ButtonCreateRoom_Click(object sender, EventArgs e)
         {
-            var res = await this.matchingService.CreateRoomAsync(new CreateRoomRequest { MaxPlayers = uint.Parse(this.textBoxRoomSize.Text) });
-            this.MonitorRoomUpdated();
-            this.textBoxRoomNo.Text = res.No.ToString();
+            // TODO: もしエラーになったらボタン等を戻すようにする
             this.groupBoxPlayer.Enabled = false;
             this.groupBoxCreateRoom.Enabled = false;
             this.groupBoxMatch.Enabled = false;
             this.groupBoxList.Enabled = false;
+            var res = await this.matchingService.CreateRoomAsync(new CreateRoomRequest { MaxPlayers = uint.Parse(this.textBoxRoomSize.Text) });
+            this.MonitorRoomUpdated();
+            this.textBoxRoomNo.Text = res.No.ToString();
             this.groupBoxGame.Enabled = true;
         }
 
@@ -169,13 +177,14 @@ namespace Honememo.MatchingApiExample.Client
         /// <param name="e">イベントパラメータ。</param>
         private async void ButtonMatch_Click(object sender, EventArgs e)
         {
-            var res = await this.matchingService.MatchRoomAsync(new Empty());
-            this.MonitorRoomUpdated();
-            this.textBoxRoomNo.Text = res.No.ToString();
+            // TODO: もしエラーになったらボタン等を戻すようにする
             this.groupBoxPlayer.Enabled = false;
             this.groupBoxCreateRoom.Enabled = false;
             this.groupBoxMatch.Enabled = false;
             this.groupBoxList.Enabled = false;
+            var res = await this.matchingService.MatchRoomAsync(new Empty());
+            this.MonitorRoomUpdated();
+            this.textBoxRoomNo.Text = res.No.ToString();
             this.groupBoxGame.Enabled = true;
         }
 
@@ -186,6 +195,9 @@ namespace Honememo.MatchingApiExample.Client
         /// <param name="e">イベントパラメータ。</param>
         private async void ButtonLeaveRoom_Click(object sender, EventArgs e)
         {
+            // TODO: もしエラーになったらボタン等を戻すようにする
+            this.textBoxRoomNo.Text = string.Empty;
+            this.groupBoxGame.Enabled = false;
             if (this.roomUpdatedSource != null)
             {
                 this.roomUpdatedSource.Cancel();
@@ -193,8 +205,6 @@ namespace Honememo.MatchingApiExample.Client
             }
 
             await this.matchingService.LeaveRoomAsync(new Empty());
-            this.textBoxRoomNo.Text = string.Empty;
-            this.groupBoxGame.Enabled = false;
             this.groupBoxCreateRoom.Enabled = true;
             this.groupBoxMatch.Enabled = true;
             this.groupBoxList.Enabled = true;

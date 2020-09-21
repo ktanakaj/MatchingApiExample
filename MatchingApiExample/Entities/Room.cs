@@ -44,7 +44,7 @@ namespace Honememo.MatchingApiExample.Entities
         /// </summary>
         /// <param name="no">ルーム番号。</param>
         /// <param name="maxPlayers">ルームの最大人数。</param>
-        public Room(uint no, uint maxPlayers)
+        public Room(uint no, ushort maxPlayers)
         {
             this.No = no;
             this.MaxPlayers = maxPlayers;
@@ -71,12 +71,12 @@ namespace Honememo.MatchingApiExample.Entities
         /// <summary>
         /// ルームの最大人数。
         /// </summary>
-        public uint MaxPlayers { get; }
+        public ushort MaxPlayers { get; }
 
         /// <summary>
         /// レーティング値。
         /// </summary>
-        public uint Rating { get; private set; }
+        public ushort Rating { get; private set; }
 
         /// <summary>
         /// ルームに入室中のプレイヤーのリスト。
@@ -250,7 +250,7 @@ namespace Honememo.MatchingApiExample.Entities
             // ※ この仕組みだと端数がずれるし、また入室後の増減も加味されないが、
             //    別に厳密な値が必要なわけじゃないので気にしない。
             var oldPlayers = newPlayers + (diff > 0 ? -1 : 1);
-            this.Rating = (uint)(((oldPlayers * this.Rating) + diff) / newPlayers);
+            this.Rating = (ushort)(((oldPlayers * this.Rating) + diff) / newPlayers);
         }
 
         #endregion

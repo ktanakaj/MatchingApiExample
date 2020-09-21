@@ -12,6 +12,7 @@ namespace Honememo.MatchingApiExample.Service
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using AutoMapper;
     using Google.Protobuf.WellKnownTypes;
@@ -22,6 +23,7 @@ namespace Honememo.MatchingApiExample.Service
     using Honememo.MatchingApiExample.Exceptions;
     using Honememo.MatchingApiExample.Protos;
     using Honememo.MatchingApiExample.Repositories;
+    using Player = Entities.Player;
 
     /// <summary>
     /// マッチングサービス。
@@ -29,7 +31,35 @@ namespace Honememo.MatchingApiExample.Service
     [Authorize]
     public class MatchingService : Matching.MatchingBase
     {
+        #region 定数
+
+        /// <summary>
+        /// 特に指定がない場合のルームの最大人数。
+        /// </summary>
+        private static readonly ushort DefaultMaxPlayers = 2;
+
+        /// <summary>
+        /// マッチング処理の処理条件配列。
+        /// </summary>
+        /// <remarks>5秒ごとに範囲を広げてマッチング実行。10秒経っても見つからなければ全ルームを対象にする。</remarks>
+        private static readonly MatchingCondition[] MatchingConditions = new[]
+            {
+                new MatchingCondition { Range = 100, Next = 5000 },
+                new MatchingCondition { Range = 100, Next = 0 },
+                new MatchingCondition { Range = 200, Next = 5000 },
+                new MatchingCondition { Range = 100, Next = 0 },
+                new MatchingCondition { Range = 200, Next = 0 },
+                new MatchingCondition { Range = ushort.MaxValue, Next = 0 },
+            };
+
+        #endregion
+
         #region メンバー変数
+
+        /// <summary>
+        /// 乱数。
+        /// </summary>
+        private readonly Random random = new Random();
 
         /// <summary>
         /// ロガー。
@@ -89,7 +119,7 @@ namespace Honememo.MatchingApiExample.Service
                 throw new AlreadyExistsException($"Player ID={player.Id} is already exists in the Room No={room.No}");
             }
 
-            room = this.roomRepository.CreateRoom(request.MaxPlayers);
+            room = this.roomRepository.CreateRoom((ushort)request.MaxPlayers);
             room.AddPlayer(player);
             return this.mapper.Map<CreateRoomReply>(room);
         }
@@ -102,12 +132,18 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>空レスポンス。</returns>
         public override async Task<Empty> JoinRoom(JoinRoomRequest request, ServerCallContext context)
         {
+            var player = await this.playerRepository.FindOrFail(context.GetPlayerId());
             if (!this.roomRepository.TryGetRoom(request.No, out Room room))
             {
                 throw new NotFoundException($"Room No={request.No} is not found");
             }
 
-            room.AddPlayer(await this.playerRepository.FindOrFail(context.GetPlayerId()));
+            if (this.roomRepository.TryGetRoomByPlayerId(player.Id, out Room nowRoom))
+            {
+                throw new AlreadyExistsException($"Player ID={player.Id} is already exists in the Room No={nowRoom.No}");
+            }
+
+            room.AddPlayer(player);
             return new Empty();
         }
 
@@ -184,22 +220,94 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>入室or作成した部屋情報。</returns>
         public override async Task<MatchRoomReply> MatchRoom(Empty request, ServerCallContext context)
         {
-            // TODO: 仮実装。現在は空いてる先頭のルームに入れるだけ
+            // 時間を置きながら複数回マッチングを試行する
             var player = await this.playerRepository.FindOrFail(context.GetPlayerId());
-            var rooms = this.roomRepository.GetRooms();
-            foreach (var room in rooms)
+            foreach (var condition in MatchingConditions)
             {
-                if (!room.IsFull())
+                var room = await this.MatchRoomInRange(player, condition.Range);
+                if (room != null)
                 {
-                    room.AddPlayer(player);
                     return this.mapper.Map<MatchRoomReply>(room);
                 }
+
+                await Task.Delay(condition.Next);
             }
 
             // 無かったら新規作成
-            var newRoom = this.roomRepository.CreateRoom(2);
+            var newRoom = this.roomRepository.CreateRoom(DefaultMaxPlayers);
             newRoom.AddPlayer(player);
             return this.mapper.Map<MatchRoomReply>(newRoom);
+        }
+
+        #endregion
+
+        #region 内部メソッド
+
+        /// <summary>
+        /// 部屋を指定されたレーティング範囲でマッチングする。
+        /// </summary>
+        /// <param name="player">マッチングするプレイヤー。</param>
+        /// <param name="range">マッチングするレーティング範囲。※±100の場合100</param>
+        /// <returns>マッチングした場合、そのルーム。入室出来なかった場合はnull。</returns>
+        /// <exception cref="AlreadyExistsException">既に入室中の場合。</exception>
+        private async Task<Room> MatchRoomInRange(Player player, ushort range)
+        {
+            // 処理中に入室している可能性もあるのでここでチェック
+            if (this.roomRepository.TryGetRoomByPlayerId(player.Id, out Room nowRoom))
+            {
+                throw new AlreadyExistsException($"Player ID={player.Id} is already exists in the Room No={nowRoom.No}");
+            }
+
+            // 指定された上下レーティング範囲のルームを取得
+            var rooms = this.roomRepository.FindAvailableRooms(
+                (ushort)Math.Max(player.Rating - range, 0),
+                (ushort)Math.Min(player.Rating + range, ushort.MaxValue));
+            if (rooms.Count == 0)
+            {
+                return null;
+            }
+
+            // 古いルームから順番に入室を試みる
+            // （Room側で排他制御しているので、入れなかったら例外が飛ぶ）
+            foreach (var room in rooms.OrderBy(r => r.CreatedAt))
+            {
+                try
+                {
+                    room.AddPlayer(player);
+                    return room;
+                }
+                catch (InvalidOperationException e)
+                {
+                    this.logger.LogDebug(e, $"Room No={room.No} AddPlayer failed");
+                }
+            }
+
+            // どこにも入れなかったら入室失敗
+            return null;
+        }
+
+        #endregion
+
+        #region 内部クラス
+
+        /// <summary>
+        /// マッチング処理のループ条件。
+        /// </summary>
+        private class MatchingCondition
+        {
+            #region プロパティ
+
+            /// <summary>
+            /// マッチングするレーティング範囲。
+            /// </summary>
+            public ushort Range { get; set; }
+
+            /// <summary>
+            /// 次のマッチング条件までのウェイト。
+            /// </summary>
+            public int Next { get; set; }
+
+            #endregion
         }
 
         #endregion

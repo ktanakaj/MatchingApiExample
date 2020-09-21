@@ -23,6 +23,7 @@ namespace Honememo.MatchingApiExample.Repositories
     /// <remarks>
     /// ルームをメモリ上で管理するもの。
     /// メモリ上で処理するため、シングルトンなどで用いてください。
+    /// （スケールさせる場合はRedisなどを用いる想定。）
     /// </remarks>
     public class RoomRepository
     {
@@ -139,7 +140,7 @@ namespace Honememo.MatchingApiExample.Repositories
         /// </summary>
         /// <param name="maxPlayers">ルームの最大人数。</param>
         /// <returns>作成したルーム。</returns>
-        public Room CreateRoom(uint maxPlayers)
+        public Room CreateRoom(ushort maxPlayers)
         {
             Room room;
             lock (this.rooms)
@@ -182,6 +183,17 @@ namespace Honememo.MatchingApiExample.Repositories
         public ICollection<int> GetPlayers()
         {
             return this.roomNoByPlayerIds.Keys;
+        }
+
+        /// <summary>
+        /// 空きがあるルームを探索する。
+        /// </summary>
+        /// <param name="minRating">レーティング範囲下限。</param>
+        /// <param name="maxRating">レーティング範囲上限。</param>
+        /// <returns>ルームコレクション。</returns>
+        public ICollection<Room> FindAvailableRooms(ushort minRating = 0, ushort maxRating = ushort.MaxValue)
+        {
+            return this.GetRooms().Where(r => !r.IsFull() && r.Rating >= minRating && r.Rating <= maxRating).ToList();
         }
 
         #endregion

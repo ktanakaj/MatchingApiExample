@@ -24,11 +24,12 @@ namespace Honememo.MatchingApiExample.Service
     using Honememo.MatchingApiExample.Exceptions;
     using Honememo.MatchingApiExample.Protos;
     using Honememo.MatchingApiExample.Repositories;
+    using Player = Entities.Player;
 
     /// <summary>
     /// プレイヤー関連サービス。
     /// </summary>
-    public class PlayerService : Player.PlayerBase
+    public class PlayerService : Protos.Player.PlayerBase
     {
         #region メンバー変数
 
@@ -77,7 +78,7 @@ namespace Honememo.MatchingApiExample.Service
         public override async Task<PlayerInfo> SignUp(SignUpRequest request, ServerCallContext context)
         {
             // TODO: 空チェック、重複チェック
-            var player = this.mapper.Map<Entities.Player>(request);
+            var player = this.mapper.Map<Player>(request);
             player.Name = "(empty)";
             player.LastLogin = DateTimeOffset.UtcNow;
             player = await this.playerRepository.Create(player);
@@ -143,7 +144,7 @@ namespace Honememo.MatchingApiExample.Service
         /// <param name="player">サインインするプレイヤー。</param>
         /// <param name="context">実行コンテキスト。</param>
         /// <returns>処理状態。</returns>
-        private async Task SignInAsync(Entities.Player player, ServerCallContext context)
+        private async Task SignInAsync(Player player, ServerCallContext context)
         {
             // HTTPコンテキストの認証メソッドを呼び出す
             // （Cookieを使うわけでは無いが、手動での認証のため便宜上Cookie扱い）
