@@ -29,7 +29,7 @@ namespace Honememo.MatchingApiExample.Entities
             this.CreateMap<Room, CreateRoomReply>();
             this.CreateMap<Room, MatchRoomReply>();
             this.CreateMap<Room, RoomSummary>().ForMember(dest => dest.Players, opt => opt.MapFrom(src => src.PlayerIds.Count));
-            this.CreateMap<Room, GetRoomStatusReply>();
+            this.CreateMap<Room, GetRoomReply>();
         }
     }
 }

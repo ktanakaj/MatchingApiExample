@@ -119,7 +119,7 @@ namespace Honememo.MatchingApiExample
             {
                 endpoints.MapGrpcService<PlayerService>();
                 endpoints.MapGrpcService<MatchingService>();
-                endpoints.MapGrpcService<GameService>();
+                endpoints.MapGrpcService<ShiritoriService>();
 
                 endpoints.MapGet("/", async context =>
                 {

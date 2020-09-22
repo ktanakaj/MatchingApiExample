@@ -49,11 +49,6 @@ namespace Honememo.MatchingApiExample.Client
         private Matching.MatchingClient matchingService;
 
         /// <summary>
-        /// ゲームサービスのクライアント。
-        /// </summary>
-        private Game.GameClient gameService;
-
-        /// <summary>
         /// RoomsUpdated用のキャンセルトークンソース。
         /// </summary>
         private CancellationTokenSource roomsUpdatedSource;
@@ -267,7 +262,6 @@ namespace Honememo.MatchingApiExample.Client
                 this.channel = GrpcChannel.ForAddress(uri, options);
                 this.playerService = new Player.PlayerClient(this.channel);
                 this.matchingService = new Matching.MatchingClient(this.channel);
-                this.gameService = new Game.GameClient(this.channel);
 
                 // プレイヤー登録orログインを実施
                 if (Settings.Default.PlayerId <= 0)
@@ -326,7 +320,6 @@ namespace Honememo.MatchingApiExample.Client
                 this.matchingService.LeaveRoom(new Empty());
             }
 
-            this.gameService = null;
             this.matchingService = null;
             this.playerService = null;
 
@@ -340,12 +333,12 @@ namespace Honememo.MatchingApiExample.Client
         }
 
         /// <summary>
-        /// ルーム一覧更新イベントを監視する。
+        /// ルーム一覧を監視する。
         /// </summary>
         private async void MonitorRoomsUpdated()
         {
             this.roomsUpdatedSource = new CancellationTokenSource();
-            using var call = this.matchingService.FireRoomsUpdated(new Empty());
+            using var call = this.matchingService.WatchRooms(new Empty());
             try
             {
                 await foreach (var reply in call.ResponseStream.ReadAllAsync(this.roomsUpdatedSource.Token))
@@ -369,12 +362,12 @@ namespace Honememo.MatchingApiExample.Client
         }
 
         /// <summary>
-        /// ルーム状態更新イベントを監視する。
+        /// 入室中のルームの状態を監視する。
         /// </summary>
         private async void MonitorRoomUpdated()
         {
             this.roomUpdatedSource = new CancellationTokenSource();
-            using var call = this.gameService.FireRoomUpdated(new Empty());
+            using var call = this.matchingService.WatchRoom(new Empty());
             try
             {
                 await foreach (var reply in call.ResponseStream.ReadAllAsync(this.roomUpdatedSource.Token))

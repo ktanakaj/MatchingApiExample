@@ -61,6 +61,16 @@ namespace Honememo.MatchingApiExample.Repositories
         /// </summary>
         /// <param name="id">プレイヤーID。</param>
         /// <returns>プレイヤー。</returns>
+        public async Task<IList<Player>> Find(ICollection<int> ids)
+        {
+            return await this.context.Players.Where(p => ids.Contains(p.Id)).OrderBy(b => b.Name).ThenBy(b => b.Id).ToListAsync();
+        }
+
+        /// <summary>
+        /// プレイヤーIDでプレイヤーを取得する。
+        /// </summary>
+        /// <param name="id">プレイヤーID。</param>
+        /// <returns>プレイヤー。</returns>
         public async Task<Player> Find(int id)
         {
             return await this.context.Players.FindAsync(id);

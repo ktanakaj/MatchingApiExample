@@ -102,7 +102,7 @@ namespace Honememo.MatchingApiExample.Service
 
         #endregion
 
-        #region gRPCメソッド
+        #region gRPC更新系メソッド
 
         /// <summary>
         /// 部屋を作成する。
@@ -171,48 +171,6 @@ namespace Honememo.MatchingApiExample.Service
         }
 
         /// <summary>
-        /// 部屋の一覧を取得する。
-        /// </summary>
-        /// <param name="request">空パラメータ。</param>
-        /// <param name="context">実行コンテキスト。</param>
-        /// <returns>部屋の一覧。</returns>
-        public override async Task<FindRoomsReply> FindRooms(Empty request, ServerCallContext context)
-        {
-            var rooms = this.roomRepository.GetRooms();
-            var reply = new FindRoomsReply { Count = (uint)rooms.Count };
-            reply.Rooms.AddRange(this.mapper.Map<ICollection<RoomSummary>>(rooms));
-            return reply;
-        }
-
-        /// <summary>
-        /// 部屋の一覧の更新を通知させる。
-        /// </summary>
-        /// <param name="request">空パラメータ。</param>
-        /// <param name="responseStream">レスポンス用のストリーム。</param>
-        /// <param name="context">実行コンテキスト。</param>
-        /// <returns>処理状態。</returns>
-        public override async Task FireRoomsUpdated(Empty request, IServerStreamWriter<FindRoomsReply> responseStream, ServerCallContext context)
-        {
-            // 初回は普通に実行して、以後はイベントが起きたタイミングで実行
-            await responseStream.WriteAsync(await this.FindRooms(new Empty(), context));
-
-            EventHandler<Room> f = async (sender, room) =>
-            {
-                if (!context.CancellationToken.IsCancellationRequested)
-                {
-                    await responseStream.WriteAsync(await this.FindRooms(new Empty(), context));
-                }
-            };
-            this.roomRepository.OnUpdated += f;
-            while (!context.CancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(500);
-            }
-
-            this.roomRepository.OnUpdated -= f;
-        }
-
-        /// <summary>
         /// 部屋をマッチングする。
         /// </summary>
         /// <param name="request">空パラメータ。</param>
@@ -237,6 +195,103 @@ namespace Honememo.MatchingApiExample.Service
             var newRoom = this.roomRepository.CreateRoom(DefaultMaxPlayers);
             newRoom.AddPlayer(player);
             return this.mapper.Map<MatchRoomReply>(newRoom);
+        }
+
+        #endregion
+
+        #region gRPC参照系メソッド
+
+        /// <summary>
+        /// 部屋の一覧を取得する。
+        /// </summary>
+        /// <param name="request">空パラメータ。</param>
+        /// <param name="context">実行コンテキスト。</param>
+        /// <returns>部屋の一覧。</returns>
+        public override async Task<FindRoomsReply> FindRooms(Empty request, ServerCallContext context)
+        {
+            var rooms = this.roomRepository.GetRooms();
+            var reply = new FindRoomsReply { Count = (uint)rooms.Count };
+            reply.Rooms.AddRange(this.mapper.Map<ICollection<RoomSummary>>(rooms));
+            return reply;
+        }
+
+        /// <summary>
+        /// 部屋の一覧を監視する。
+        /// </summary>
+        /// <param name="request">空パラメータ。</param>
+        /// <param name="responseStream">レスポンス用のストリーム。</param>
+        /// <param name="context">実行コンテキスト。</param>
+        /// <returns>処理状態。</returns>
+        public override async Task WatchRooms(Empty request, IServerStreamWriter<FindRoomsReply> responseStream, ServerCallContext context)
+        {
+            // 初回は普通に実行して、以後はイベントが起きたタイミングで実行
+            await responseStream.WriteAsync(await this.FindRooms(new Empty(), context));
+
+            EventHandler<Room> f = async (sender, room) =>
+            {
+                if (!context.CancellationToken.IsCancellationRequested)
+                {
+                    await responseStream.WriteAsync(await this.FindRooms(new Empty(), context));
+                }
+            };
+            this.roomRepository.OnUpdated += f;
+            while (!context.CancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(500);
+            }
+
+            this.roomRepository.OnUpdated -= f;
+        }
+
+        /// <summary>
+        /// 入室中の部屋の情報を取得する。
+        /// </summary>
+        /// <param name="request">空パラメータ。</param>
+        /// <param name="context">実行コンテキスト。</param>
+        /// <returns>入室中の部屋情報。</returns>
+        public override async Task<GetRoomReply> GetRoom(Empty request, ServerCallContext context)
+        {
+            var playerId = context.GetPlayerId();
+            if (!this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
+            {
+                throw new FailedPreconditionException($"Player ID={playerId} is not joined any room");
+            }
+
+            return await this.MakeRoomStatus(room);
+        }
+
+        /// <summary>
+        /// 入室中の部屋の情報を監視する。
+        /// </summary>
+        /// <param name="request">空パラメータ。</param>
+        /// <param name="responseStream">レスポンス用のストリーム。</param>
+        /// <param name="context">実行コンテキスト。</param>
+        /// <returns>処理状態。</returns>
+        public override async Task WatchRoom(Empty request, IServerStreamWriter<GetRoomReply> responseStream, ServerCallContext context)
+        {
+            var playerId = context.GetPlayerId();
+            if (!this.roomRepository.TryGetRoomByPlayerId(playerId, out Room room))
+            {
+                throw new FailedPreconditionException($"Player ID={playerId} is not joined any room");
+            }
+
+            // 初回は普通に実行して、以後はイベントが起きたタイミングで実行
+            await responseStream.WriteAsync(await this.MakeRoomStatus(room));
+
+            EventHandler<Room.UpdatedEventArgs> f = async (sender, e) =>
+            {
+                if (!context.CancellationToken.IsCancellationRequested)
+                {
+                    await responseStream.WriteAsync(await this.MakeRoomStatus(room));
+                }
+            };
+            room.OnUpdated += f;
+            while (!context.CancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(500);
+            }
+
+            room.OnUpdated -= f;
         }
 
         #endregion
@@ -284,6 +339,18 @@ namespace Honememo.MatchingApiExample.Service
 
             // どこにも入れなかったら入室失敗
             return null;
+        }
+
+        /// <summary>
+        /// 部屋情報の戻り値を生成する。
+        /// </summary>
+        /// <param name="room">元となるルーム。</param>
+        /// <returns>部屋情報。</returns>
+        private async Task<GetRoomReply> MakeRoomStatus(Room room)
+        {
+            var reply = this.mapper.Map<GetRoomReply>(room);
+            reply.Players.Add(this.mapper.Map<ICollection<PlayerInfo>>(await this.playerRepository.Find(room.PlayerIds)));
+            return reply;
         }
 
         #endregion

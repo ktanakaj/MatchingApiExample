@@ -9,8 +9,8 @@
     <Import_RootNamespace>Honememo.MatchingApiExample</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Protobuf Include="$(MSBuildThisFileDirectory)Protos\game.proto" GrpcServices="Both" />
     <Protobuf Include="$(MSBuildThisFileDirectory)Protos\matching.proto" GrpcServices="Both" />
     <Protobuf Include="$(MSBuildThisFileDirectory)Protos\player.proto" GrpcServices="Both" />
+    <Protobuf Include="$(MSBuildThisFileDirectory)Protos\shiritori.proto" GrpcServices="Both" />
   </ItemGroup>
 </Project>

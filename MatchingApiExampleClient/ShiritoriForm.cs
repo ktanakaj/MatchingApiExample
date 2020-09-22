@@ -11,7 +11,12 @@
 namespace Honememo.MatchingApiExample.Client
 {
     using System;
+    using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows.Forms;
+    using Google.Protobuf.WellKnownTypes;
+    using Grpc.Net.Client;
+    using Honememo.MatchingApiExample.Protos;
 
     /// <summary>
     /// gRPC勉強用マッチングAPIサンプルしりとりゲーム画面のクラスです。
@@ -19,6 +24,25 @@ namespace Honememo.MatchingApiExample.Client
     /// <remarks>TODO: 全体的に動けばいいやの仮実装。</remarks>
     public partial class ShiritoriForm : Form
     {
+        #region メンバー変数
+
+        /// <summary>
+        /// gRPCチャネル。
+        /// </summary>
+        private GrpcChannel channel;
+
+        /// <summary>
+        /// しりとりゲームサービスのクライアント。
+        /// </summary>
+        private Shiritori.ShiritoriClient shiritoriService;
+
+        /// <summary>
+        /// Ready用のキャンセルトークンソース。
+        /// </summary>
+        private CancellationTokenSource readySource;
+
+        #endregion
+
         #region コンストラクタ
 
         /// <summary>

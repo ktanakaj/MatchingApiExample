@@ -5,6 +5,7 @@ option csharp_namespace = "Honememo.MatchingApiExample.Protos";
 package honememo.matching_api_example;
 
 import "google/protobuf/empty.proto";
+import "player.proto";
 
 // マッチングサービス。
 service Matching {
@@ -14,12 +15,16 @@ service Matching {
   rpc JoinRoom (JoinRoomRequest) returns (google.protobuf.Empty);
   // 部屋を出る。
   rpc LeaveRoom (google.protobuf.Empty) returns (google.protobuf.Empty);
-  // 部屋の一覧を取得する。
-  rpc FindRooms (google.protobuf.Empty) returns (FindRoomsReply);
-  // 部屋の一覧の更新を通知させる。
-  rpc FireRoomsUpdated (google.protobuf.Empty) returns (stream FindRoomsReply);
   // 部屋をマッチングする。
   rpc MatchRoom (google.protobuf.Empty) returns (MatchRoomReply);
+  // 部屋の一覧を取得する。
+  rpc FindRooms (google.protobuf.Empty) returns (FindRoomsReply);
+  // 部屋の一覧を監視する。
+  rpc WatchRooms (google.protobuf.Empty) returns (stream FindRoomsReply);
+  // 入室中の部屋の情報を取得する。
+  rpc GetRoom (google.protobuf.Empty) returns (GetRoomReply);
+  // 入室中の部屋の情報を監視する。
+  rpc WatchRoom (google.protobuf.Empty) returns (stream GetRoomReply);
 }
 
 // 部屋の概要。
@@ -52,6 +57,12 @@ message JoinRoomRequest {
   uint32 no = 1;
 }
 
+// マッチングの戻り値。
+message MatchRoomReply {
+  // 部屋番号。
+  uint32 no = 1;
+}
+
 // 部屋一覧の戻り値。
 message FindRoomsReply {
   // 部屋の概要リスト。
@@ -60,8 +71,10 @@ message FindRoomsReply {
   uint32 count = 2;
 }
 
-// マッチングの戻り値。
-message MatchRoomReply {
+// 部屋情報取得の戻り値。
+message GetRoomReply {
   // 部屋番号。
   uint32 no = 1;
+  // 参加プレイヤーのリスト。
+  repeated PlayerInfo players = 2;
 }

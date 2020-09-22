@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+option csharp_namespace = "Honememo.MatchingApiExample.Protos";
+
+package honememo.matching_api_example;
+
+import "google/protobuf/empty.proto";
+
+// しりとりゲームサービス。
+service Shiritori {
+  // ゲームを準備完了にする。
+  rpc Ready (google.protobuf.Empty) returns (stream GameEventReply);
+  // 自分の手番に単語を回答する。
+  rpc Answer (AnswerRequest) returns (AnswerReply);
+  // 直前の他人の回答に異議を送信する。
+  rpc Claim (google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+// 回答結果列挙体。
+enum ShiritoriResult {
+  OK = 0;
+  NG = 1;
+  GAMEOVER = 2;
+}
+
+// 単語回答の引数。
+message AnswerRequest {
+  // 単語。※英数漢字不可
+  string word = 1;
+}
+
+// 単語回答の戻り値。
+message AnswerReply {
+  // 結果。
+  ShiritoriResult result = 1;
+}
+
+// ゲームイベントの戻り値。
+message GameEventReply {
+  // ゲームイベント種別列挙体。
+  enum Type {
+    READY = 0;
+    START = 1;
+    INPUT = 2;
+    ANSWER = 3;
+    CLAIM = 4;
+    END = 5;
+  }
+  // 戻り値の種類。
+  Type type = 1;
+  // プレイヤーID。
+  int32 playerId = 2;
+  // 回答された単語。
+  string word = 3;
+  // 回答の結果。
+  ShiritoriResult result = 4;
+}
