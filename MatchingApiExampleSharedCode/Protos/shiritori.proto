@@ -5,6 +5,7 @@ option csharp_namespace = "Honememo.MatchingApiExample.Protos";
 package honememo.matching_api_example;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 // しりとりゲームサービス。
 service Shiritori {
@@ -14,6 +15,16 @@ service Shiritori {
   rpc Answer (AnswerRequest) returns (AnswerReply);
   // 直前の他人の回答に異議を送信する。
   rpc Claim (google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+// ゲームイベント種別列挙体。
+enum ShiritoriEventType {
+  READY = 0;
+  START = 1;
+  INPUT = 2;
+  ANSWER = 3;
+  CLAIM = 4;
+  END = 5;
 }
 
 // 回答結果列挙体。
@@ -37,21 +48,14 @@ message AnswerReply {
 
 // ゲームイベントの戻り値。
 message GameEventReply {
-  // ゲームイベント種別列挙体。
-  enum Type {
-    READY = 0;
-    START = 1;
-    INPUT = 2;
-    ANSWER = 3;
-    CLAIM = 4;
-    END = 5;
-  }
   // 戻り値の種類。
-  Type type = 1;
+  ShiritoriEventType type = 1;
   // プレイヤーID。
   int32 playerId = 2;
   // 回答された単語。
   string word = 3;
   // 回答の結果。
   ShiritoriResult result = 4;
+  // 回答の期限。
+  google.protobuf.Timestamp limit = 5;
 }

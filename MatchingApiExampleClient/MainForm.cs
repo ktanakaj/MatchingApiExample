@@ -217,7 +217,7 @@ namespace Honememo.MatchingApiExample.Client
         /// <param name="e">イベントパラメータ。</param>
         private void ButtonShiritori_Click(object sender, EventArgs e)
         {
-            using (var form = new ShiritoriForm())
+            using (var form = new ShiritoriForm(this.channel))
             {
                 form.ShowDialog();
             }
@@ -266,7 +266,8 @@ namespace Honememo.MatchingApiExample.Client
                 // プレイヤー登録orログインを実施
                 if (Settings.Default.PlayerId <= 0)
                 {
-                    await this.playerService.SignUpAsync(new SignUpRequest { Token = Settings.Default.Token });
+                    var res = await this.playerService.SignUpAsync(new SignUpRequest { Token = Settings.Default.Token });
+                    Settings.Default.PlayerId = res.Id;
                     await this.playerService.ChangeMeAsync(new ChangeMeRequest { Name = this.textBoxPlayerName.Text, Rating = uint.Parse(this.textBoxRating.Text) });
                 }
                 else
@@ -377,6 +378,8 @@ namespace Honememo.MatchingApiExample.Client
                     {
                         this.listViewMemberList.Items.Add(new ListViewItem(player.Name));
                     }
+
+                    this.buttonShiritori.Enabled = reply.Players.Count >= 2;
                 }
             }
             catch (RpcException e)

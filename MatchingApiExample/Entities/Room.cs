@@ -20,6 +20,7 @@ namespace Honememo.MatchingApiExample.Entities
     /// </summary>
     /// <remarks>
     /// ルームは現状メモリ上で管理するため、エンティティにあるがDBとは紐づかない。
+    /// （スケールさせる場合はRedis上で管理などする。）
     /// </remarks>
     public class Room : IDisposable
     {
@@ -34,6 +35,11 @@ namespace Honememo.MatchingApiExample.Entities
         /// ルームに入室中のプレイヤーのリスト。
         /// </summary>
         private readonly IList<int> playerIds = new List<int>();
+
+        /// <summary>
+        /// このルームで実施されているゲームのID。
+        /// </summary>
+        private string gameId;
 
         #endregion
 
@@ -92,6 +98,25 @@ namespace Honememo.MatchingApiExample.Entities
         }
 
         /// <summary>
+        /// このルームで実施されているゲームのID。
+        /// </summary>
+        public string GameId
+        {
+            get => this.gameId;
+            set
+            {
+                if (this.gameId == value)
+                {
+                    return;
+                }
+
+                var e = new UpdatedEventArgs(this);
+                this.gameId = value;
+                this.FireUpdated(e);
+            }
+        }
+
+        /// <summary>
         /// ルームの作成日時。
         /// </summary>
         public DateTimeOffset CreatedAt { get; } = DateTimeOffset.Now;
@@ -133,7 +158,7 @@ namespace Honememo.MatchingApiExample.Entities
                 this.UpdateRating((int)player.Rating);
             }
 
-            this.FireUpdatedIfNeeded(e);
+            this.FireUpdated(e);
         }
 
         /// <summary>
@@ -149,18 +174,16 @@ namespace Honememo.MatchingApiExample.Entities
             {
                 this.ThrowExceptionIfDisposed();
                 e = new UpdatedEventArgs(this);
-                if (this.playerIds.Remove(player.Id))
+                if (!this.playerIds.Remove(player.Id))
                 {
-                    this.UpdateRating((int)-player.Rating);
+                    return false;
                 }
-                else
-                {
-                    e = null;
-                }
+
+                this.UpdateRating((int)-player.Rating);
             }
 
-            this.FireUpdatedIfNeeded(e);
-            return e != null;
+            this.FireUpdated(e);
+            return true;
         }
 
         /// <summary>
@@ -191,7 +214,7 @@ namespace Honememo.MatchingApiExample.Entities
             }
 
             // イベント後にイベントハンドラーも消しておく
-            this.FireUpdatedIfNeeded(e);
+            this.FireUpdated(e);
             this.OnUpdated = null;
         }
 
@@ -215,7 +238,7 @@ namespace Honememo.MatchingApiExample.Entities
         /// ルーム更新イベントを発生させる。
         /// </summary>
         /// <param name="e">発生させるイベント。nullの場合無視。</param>
-        private void FireUpdatedIfNeeded(UpdatedEventArgs e)
+        private void FireUpdated(UpdatedEventArgs e)
         {
             if (e != null)
             {
@@ -274,6 +297,7 @@ namespace Honememo.MatchingApiExample.Entities
             public UpdatedEventArgs(Room room)
             {
                 this.OldPlayerIds = room.PlayerIds;
+                this.OldGameId = room.GameId;
             }
 
             #endregion
@@ -284,6 +308,11 @@ namespace Honememo.MatchingApiExample.Entities
             /// 更新前のプレイヤーのリスト。
             /// </summary>
             public IList<int> OldPlayerIds { get; }
+
+            /// <summary>
+            /// 更新前のゲームID。
+            /// </summary>
+            public string OldGameId { get; }
 
             #endregion
         }

@@ -99,6 +99,7 @@
             // 
             this.textBoxWord.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxWord.Enabled = false;
             this.textBoxWord.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.textBoxWord.ImeMode = System.Windows.Forms.ImeMode.Hiragana;
             this.textBoxWord.Location = new System.Drawing.Point(121, 335);
@@ -112,6 +113,7 @@
             this.buttonSubmit.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonSubmit.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.buttonSubmit.Enabled = false;
             this.buttonSubmit.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.buttonSubmit.Location = new System.Drawing.Point(197, 370);
             this.buttonSubmit.Name = "buttonSubmit";
@@ -125,6 +127,7 @@
             // 
             this.buttonClaim.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonClaim.AutoSize = true;
+            this.buttonClaim.Enabled = false;
             this.buttonClaim.Location = new System.Drawing.Point(393, 262);
             this.buttonClaim.Name = "buttonClaim";
             this.buttonClaim.Size = new System.Drawing.Size(59, 25);
@@ -177,6 +180,7 @@
             this.Name = "ShiritoriForm";
             this.ShowIcon = false;
             this.Text = "しりとり（部屋番号{0}）";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ShiritoriForm_FormClosed);
             this.Load += new System.EventHandler(this.ShiritoriForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

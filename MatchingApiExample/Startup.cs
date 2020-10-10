@@ -94,6 +94,7 @@ namespace Honememo.MatchingApiExample
                         .WithScopedLifetime());
             services.AddScoped<IUnitOfWork>(x => x.GetRequiredService<AppDbContext>());
             services.AddSingleton<RoomRepository>();
+            services.AddSingleton<GameRepository>();
         }
 
         /// <summary>
