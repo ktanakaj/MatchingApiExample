@@ -147,7 +147,8 @@ namespace Honememo.MatchingApiExample.Entities
                 }
 
                 // 答えをチェックして結果通知
-                // TODO: ひらがなカタカナのみのバリデーションとかもここ？
+                // TODO: ひらがなカタカナのみや文字数のバリデーションとかもここ？
+                // TODO: 使用済みのワードもチェック
                 var result = ShiritoriResult.Ng;
                 if (word.StartsWith(input.Word))
                 {
@@ -159,6 +160,7 @@ namespace Honememo.MatchingApiExample.Entities
                 if (result == ShiritoriResult.Ok)
                 {
                     // 正解の場合、次のプレイヤーの手番にする
+                    // TODO: limitになったらタイムアウトするようにする
                     var i = this.PlayerIds.IndexOf(playerId);
                     var next = i + 1 < this.PlayerIds.Count() ? this.PlayerIds[i + 1] : this.PlayerIds[0];
                     this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Input) { PlayerId = next, Word = word.Last().ToString(), Limit = DateTimeOffset.Now.AddSeconds(10), });
