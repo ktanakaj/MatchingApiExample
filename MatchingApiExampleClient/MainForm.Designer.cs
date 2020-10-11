@@ -41,6 +41,7 @@ namespace Honememo.MatchingApiExample.Client
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.groupBoxConfig = new System.Windows.Forms.GroupBox();
             this.buttonConnect = new System.Windows.Forms.Button();
             this.textBoxUrl = new System.Windows.Forms.TextBox();
@@ -69,12 +70,14 @@ namespace Honememo.MatchingApiExample.Client
             this.buttonLeaveRoom = new System.Windows.Forms.Button();
             this.textBoxRoomNo = new System.Windows.Forms.TextBox();
             this.labelRoomNo = new System.Windows.Forms.Label();
+            this.errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
             this.groupBoxConfig.SuspendLayout();
             this.groupBoxPlayer.SuspendLayout();
             this.groupBoxCreateRoom.SuspendLayout();
             this.groupBoxMatch.SuspendLayout();
             this.groupBoxList.SuspendLayout();
             this.groupBoxGame.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBoxConfig
@@ -110,8 +113,10 @@ namespace Honememo.MatchingApiExample.Client
             this.textBoxUrl.Location = new System.Drawing.Point(79, 22);
             this.textBoxUrl.MaxLength = 4096;
             this.textBoxUrl.Name = "textBoxUrl";
-            this.textBoxUrl.Size = new System.Drawing.Size(423, 23);
+            this.textBoxUrl.Size = new System.Drawing.Size(411, 23);
             this.textBoxUrl.TabIndex = 1;
+            this.textBoxUrl.Validating += new System.ComponentModel.CancelEventHandler(this.TextBoxUrl_Validating);
+            this.textBoxUrl.Validated += new System.EventHandler(this.ResetErrorProvider_Validated);
             // 
             // labelUrl
             // 
@@ -157,6 +162,8 @@ namespace Honememo.MatchingApiExample.Client
             this.textBoxRating.Name = "textBoxRating";
             this.textBoxRating.Size = new System.Drawing.Size(49, 23);
             this.textBoxRating.TabIndex = 3;
+            this.textBoxRating.Validating += new System.ComponentModel.CancelEventHandler(this.TextBoxRating_Validating);
+            this.textBoxRating.Validated += new System.EventHandler(this.ResetErrorProvider_Validated);
             // 
             // labelPlayerRating
             // 
@@ -174,6 +181,8 @@ namespace Honememo.MatchingApiExample.Client
             this.textBoxPlayerName.Name = "textBoxPlayerName";
             this.textBoxPlayerName.Size = new System.Drawing.Size(205, 23);
             this.textBoxPlayerName.TabIndex = 1;
+            this.textBoxPlayerName.Validating += new System.ComponentModel.CancelEventHandler(this.RequireTextBox_Validating);
+            this.textBoxPlayerName.Validated += new System.EventHandler(this.ResetErrorProvider_Validated);
             // 
             // labelPlayerName
             // 
@@ -213,9 +222,11 @@ namespace Honememo.MatchingApiExample.Client
             this.textBoxRoomSize.Location = new System.Drawing.Point(46, 22);
             this.textBoxRoomSize.MaxLength = 2;
             this.textBoxRoomSize.Name = "textBoxRoomSize";
-            this.textBoxRoomSize.Size = new System.Drawing.Size(52, 23);
+            this.textBoxRoomSize.Size = new System.Drawing.Size(40, 23);
             this.textBoxRoomSize.TabIndex = 1;
             this.textBoxRoomSize.Text = "2";
+            this.textBoxRoomSize.Validating += new System.ComponentModel.CancelEventHandler(this.TextBoxRoomSize_Validating);
+            this.textBoxRoomSize.Validated += new System.EventHandler(this.ResetErrorProvider_Validated);
             // 
             // labelRoomSize
             // 
@@ -376,6 +387,11 @@ namespace Honememo.MatchingApiExample.Client
             this.labelRoomNo.TabIndex = 1;
             this.labelRoomNo.Text = "部屋番号:";
             // 
+            // errorProvider
+            // 
+            this.errorProvider.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
+            this.errorProvider.ContainerControl = this;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -406,6 +422,7 @@ namespace Honememo.MatchingApiExample.Client
             this.groupBoxList.ResumeLayout(false);
             this.groupBoxGame.ResumeLayout(false);
             this.groupBoxGame.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -440,6 +457,7 @@ namespace Honememo.MatchingApiExample.Client
         private System.Windows.Forms.ColumnHeader columnHeaderRoomListRating;
         private System.Windows.Forms.ColumnHeader columnHeaderRoomListPlayers;
         private System.Windows.Forms.Button buttonShiritori;
+        private System.Windows.Forms.ErrorProvider errorProvider;
     }
 }
 

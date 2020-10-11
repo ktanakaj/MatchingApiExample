@@ -11,7 +11,7 @@
 namespace Honememo.MatchingApiExample.Client
 {
     using System;
-    using System.Diagnostics;
+    using System.ComponentModel;
     using System.Threading.Tasks;
     using System.Windows.Forms;
     using Honememo.MatchingApiExample.Client.Properties;
@@ -79,6 +79,31 @@ namespace Honememo.MatchingApiExample.Client
         #region 環境設定グループの各イベントのメソッド
 
         /// <summary>
+        /// 接続先URLテキストボックスバリデーション。
+        /// </summary>
+        /// <param name="sender">イベント発生オブジェクト。</param>
+        /// <param name="e">発生したイベント。</param>
+        private void TextBoxUrl_Validating(object sender, CancelEventArgs e)
+        {
+            this.RequireTextBox_Validating(sender, e);
+            if (e.Cancel)
+            {
+                return;
+            }
+
+            var box = (TextBox)sender;
+            try
+            {
+                new Uri(box.Text);
+            }
+            catch (UriFormatException)
+            {
+                this.errorProvider.SetError(box, Resources.WarningMessageInvalidUri);
+                e.Cancel = true;
+            }
+        }
+
+        /// <summary>
         /// 接続ボタンクリック時のイベント処理。
         /// </summary>
         /// <param name="sender">イベント発生元インスタンス。</param>
@@ -123,6 +148,27 @@ namespace Honememo.MatchingApiExample.Client
         #region プレイヤー情報グループの各イベントのメソッド
 
         /// <summary>
+        /// レーティング値テキストボックスバリデーション。
+        /// </summary>
+        /// <param name="sender">イベント発生オブジェクト。</param>
+        /// <param name="e">発生したイベント。</param>
+        private void TextBoxRating_Validating(object sender, CancelEventArgs e)
+        {
+            this.RequireTextBox_Validating(sender, e);
+            if (e.Cancel)
+            {
+                return;
+            }
+
+            var box = (TextBox)sender;
+            if (!int.TryParse(box.Text, out int rating) || rating < 0)
+            {
+                this.errorProvider.SetError(box, string.Format(Resources.WarningMessageGreaterThan, 0));
+                e.Cancel = true;
+            }
+        }
+
+        /// <summary>
         /// プレイヤー変更ボタンクリック時のイベント処理。
         /// </summary>
         /// <param name="sender">イベント発生元インスタンス。</param>
@@ -135,6 +181,27 @@ namespace Honememo.MatchingApiExample.Client
         #endregion
 
         #region マッチング系グループの各イベントのメソッド
+
+        /// <summary>
+        /// 部屋の最大人数テキストボックスバリデーション。
+        /// </summary>
+        /// <param name="sender">イベント発生オブジェクト。</param>
+        /// <param name="e">発生したイベント。</param>
+        private void TextBoxRoomSize_Validating(object sender, CancelEventArgs e)
+        {
+            this.RequireTextBox_Validating(sender, e);
+            if (e.Cancel)
+            {
+                return;
+            }
+
+            var box = (TextBox)sender;
+            if (!int.TryParse(box.Text, out int size) || size < 2)
+            {
+                this.errorProvider.SetError(box, string.Format(Resources.WarningMessageGreaterThan, 2));
+                e.Cancel = true;
+            }
+        }
 
         /// <summary>
         /// 部屋作成ボタンクリック時のイベント処理。
@@ -334,6 +401,36 @@ namespace Honememo.MatchingApiExample.Client
             }
 
             this.buttonShiritori.Enabled = e.Players.Count >= 2;
+        }
+
+        #endregion
+
+        #region 汎用のバリデートメソッド
+
+        /// <summary>
+        /// 汎用のテキストボックス必須バリデーション。
+        /// </summary>
+        /// <param name="sender">イベント発生オブジェクト。</param>
+        /// <param name="e">発生したイベント。</param>
+        private void RequireTextBox_Validating(object sender, CancelEventArgs e)
+        {
+            var box = (TextBox)sender;
+            box.Text = box.Text?.Trim();
+            if (string.IsNullOrEmpty(box.Text))
+            {
+                this.errorProvider.SetError(box, Resources.WarningMessageRequire);
+                e.Cancel = true;
+            }
+        }
+
+        /// <summary>
+        /// 汎用のエラープロバイダ初期化処理。
+        /// </summary>
+        /// <param name="sender">イベント発生オブジェクト。</param>
+        /// <param name="e">発生したイベント。</param>
+        private void ResetErrorProvider_Validated(object sender, EventArgs e)
+        {
+            this.errorProvider.SetError((Control)sender, null);
         }
 
         #endregion

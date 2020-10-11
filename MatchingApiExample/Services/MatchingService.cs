@@ -161,6 +161,7 @@ namespace Honememo.MatchingApiExample.Service
                 return new Empty();
             }
 
+            // TODO: ゲームプレイ中は抜けられないorゲームプレイ中に抜けたらゲーム終了
             room.RemovePlayer(player);
             if (room.PlayerIds.Count == 0)
             {

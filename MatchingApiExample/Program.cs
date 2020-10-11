@@ -12,6 +12,7 @@ namespace Honememo.MatchingApiExample
 {
     using System;
     using System.IO;
+    using System.Text;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
@@ -28,13 +29,15 @@ namespace Honememo.MatchingApiExample
         /// <param name="args">コマンドラインから指定された起動オプション。</param>
         public static void Main(string[] args)
         {
-            // ロガーを設定してWebアプリを起動する
+            // ロガーを設定してWebアプリを起動する。
             // （SerilogはStartup.csだと設定できないようなので。）
+            // また日本語文字コード用のライブラリも読み込み。
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(ApplyAppConfig(new ConfigurationBuilder()).Build())
                 .CreateLogger();
             try
             {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                 CreateHostBuilder(args).Build().Run();
             }
             catch (Exception exception)

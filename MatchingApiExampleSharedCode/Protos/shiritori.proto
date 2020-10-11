@@ -25,6 +25,7 @@ enum ShiritoriEventType {
   ANSWER = 3;
   CLAIM = 4;
   END = 5;
+  ABORT = 6;
 }
 
 // 回答結果列挙体。

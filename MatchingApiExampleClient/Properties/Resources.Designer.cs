@@ -68,5 +68,32 @@ namespace Honememo.MatchingApiExample.Client.Properties {
                 return ResourceManager.GetString("ErrorTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   {0}以上の値を入力してください に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string WarningMessageGreaterThan {
+            get {
+                return ResourceManager.GetString("WarningMessageGreaterThan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   URIを入力してください に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string WarningMessageInvalidUri {
+            get {
+                return ResourceManager.GetString("WarningMessageInvalidUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   値を入力してください に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string WarningMessageRequire {
+            get {
+                return ResourceManager.GetString("WarningMessageRequire", resourceCulture);
+            }
+        }
     }
 }

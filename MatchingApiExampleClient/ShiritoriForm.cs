@@ -58,6 +58,7 @@ namespace Honememo.MatchingApiExample.Client
             this.labelCountdown.Text = string.Empty;
 
             var room = await this.service.GetRoom();
+            this.Text = string.Format(this.Text, room.No);
             this.listViewMemberList.Items.Clear();
             foreach (var player in room.Players)
             {

@@ -14,6 +14,8 @@ namespace Honememo.MatchingApiExample.Entities
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
+    using System.Text.RegularExpressions;
+    using Microsoft.VisualBasic;
     using Honememo.MatchingApiExample.Exceptions;
     using Honememo.MatchingApiExample.Protos;
 
@@ -26,12 +28,43 @@ namespace Honememo.MatchingApiExample.Entities
     /// </remarks>
     public class Shiritori : IGame, IDisposable
     {
+        #region 定数
+
+        /// <summary>
+        /// ゲーム開始時に最初の文字の候補。
+        /// </summary>
+        private const string FirstChars ="あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわ";
+
+        /// <summary>
+        /// ひらがなの小文字/大文字対応表。
+        /// </summary>
+        private readonly IDictionary<char, char> HiraganaLowerAndUpper = new Dictionary<char, char>()
+        {
+            {'ぁ', 'あ'},
+            {'ぃ', 'い'},
+            {'ぅ', 'う'},
+            {'ぇ', 'え'},
+            {'ぉ', 'お'},
+            {'っ', 'つ'},
+            {'ゃ', 'や'},
+            {'ゅ', 'ゆ'},
+            {'ょ', 'よ'},
+            {'ゎ', 'わ'},
+        };
+
+        #endregion
+
         #region メンバー変数
 
         /// <summary>
         /// ロックオブジェクト。
         /// </summary>
         private readonly object lockObj = new object();
+
+        /// <summary>
+        /// 乱数ジェネレータ。
+        /// </summary>
+        private readonly Random rand = new Random();
 
         /// <summary>
         /// ゲームイベントの履歴。
@@ -41,6 +74,12 @@ namespace Honememo.MatchingApiExample.Entities
         /// 今回は異議申し立ての仕組みがあるので、履歴で持つ。
         /// </remarks>
         private IList<GameEventArgs> events = new List<GameEventArgs>();
+
+        /// <summary>
+        /// 回答済みの単語セット。
+        /// </summary>
+        /// <remarks>正規化した単語を記録する。</remarks>
+        private ISet<string> usedWords = new HashSet<string>();
 
         #endregion
 
@@ -94,7 +133,7 @@ namespace Honememo.MatchingApiExample.Entities
         /// <summary>
         /// ゲーム終了済みか？
         /// </summary>
-        public bool Disposed => this.events.LastOrDefault(e => e.Type == ShiritoriEventType.End) != null;
+        public bool Disposed => this.events.LastOrDefault(e => e.Type == ShiritoriEventType.End || e.Type == ShiritoriEventType.Abort) != null;
 
         #endregion
 
@@ -121,8 +160,7 @@ namespace Honememo.MatchingApiExample.Entities
                 // 全員が準備完了になったら、最初のプレイヤーに手番を振る
                 if (this.IsReady())
                 {
-                    // TODO: 最初の文字はランダムで抽選する
-                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Input) { PlayerId = this.PlayerIds.First(), Word = "り" });
+                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Input) { PlayerId = this.PlayerIds.First(), Word = this.RandomFirstChar().ToString() });
                 }
             }
         }
@@ -134,6 +172,7 @@ namespace Honememo.MatchingApiExample.Entities
         /// <param name="word">回答した単語。</param>
         /// <returns>回答の結果。</returns>
         /// <exception cref="FailedPreconditionException">プレイヤーの手番でない場合。</exception>
+        /// <exception cref="InvalidArgumentException">回答が空の場合。</exception>
         /// <remarks>回答結果は戻り値とイベントで返す。</remarks>
         public ShiritoriResult Answer(int playerId, string word)
         {
@@ -146,13 +185,17 @@ namespace Honememo.MatchingApiExample.Entities
                     throw new FailedPreconditionException($"Player ID={playerId} is not turn");
                 }
 
+                // 単語をひらがなに正規化する
+                var w = this.ToNormalize(word);
+
+                // 引数のシステム的なバリデーション
+                this.ValidateWord(w);
+
                 // 答えをチェックして結果通知
-                // TODO: ひらがなカタカナのみや文字数のバリデーションとかもここ？
-                // TODO: 使用済みのワードもチェック
                 var result = ShiritoriResult.Ng;
-                if (word.StartsWith(input.Word))
+                if (w.StartsWith(input.Word) && !this.usedWords.Contains(w))
                 {
-                    result = word.EndsWith('ん') ? ShiritoriResult.Gameover : ShiritoriResult.Ok;
+                    result = w.EndsWith('ん') ? ShiritoriResult.Gameover : ShiritoriResult.Ok;
                 }
 
                 this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Answer) { PlayerId = playerId, Word = word, Result = result });
@@ -161,14 +204,15 @@ namespace Honememo.MatchingApiExample.Entities
                 {
                     // 正解の場合、次のプレイヤーの手番にする
                     // TODO: limitになったらタイムアウトするようにする
+                    this.usedWords.Add(w);
                     var i = this.PlayerIds.IndexOf(playerId);
                     var next = i + 1 < this.PlayerIds.Count() ? this.PlayerIds[i + 1] : this.PlayerIds[0];
-                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Input) { PlayerId = next, Word = word.Last().ToString(), Limit = DateTimeOffset.Now.AddSeconds(10), });
+                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Input) { PlayerId = next, Word = this.GetLastChar(w).ToString(), Limit = DateTimeOffset.Now.AddSeconds(10), });
                 }
                 else if (result == ShiritoriResult.Gameover)
                 {
                     // ゲームオーバーの場合、ゲームを終了する
-                    this.Dispose();
+                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.End));
                 }
 
                 return result;
@@ -201,7 +245,7 @@ namespace Honememo.MatchingApiExample.Entities
             {
                 if (!this.Disposed)
                 {
-                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.End));
+                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Abort));
                 }
             }
 
@@ -279,6 +323,71 @@ namespace Honememo.MatchingApiExample.Entities
         {
             // 全プレイヤーが準備完了済みならOK
             return this.events.Count(e => e.Type == ShiritoriEventType.Ready) >= this.PlayerIds.Count();
+        }
+
+        /// <summary>
+        /// ゲームスタート時に使う最初の文字を抽選する。
+        /// </summary>
+        /// <returns>抽選した文字。</returns>
+        private char RandomFirstChar()
+        {
+            // 候補のひらがなの中から、一文字を抽選する
+            return FirstChars[this.rand.Next(0, FirstChars.Length)];
+        }
+
+        /// <summary>
+        /// 入力された単語をバリデーションする。
+        /// </summary>
+        /// <param name="s">チェックする文字列。※正規化済</param>
+        /// <exception cref="InvalidArgumentException">回答がバリデーションNGの場合。</exception>
+        /// <remarks>回答としてNGではなく、そもそも引数として渡されるべきではないものをチェックする。</remarks>
+        private void ValidateWord(string word)
+        {
+            if (string.IsNullOrEmpty(word))
+            {
+                throw new InvalidArgumentException("Word is null or empty");
+            }
+            else if (word.Length <= 1)
+            {
+                throw new InvalidArgumentException($"Word length must be longer than 1 (word={word})");
+            }
+            else if (!Regex.IsMatch(word, @"^(\p{IsHiragana}|ー|－)*$"))
+            {
+                // ひらがな／カタカナの他、延ばす記号も許容する
+                throw new InvalidArgumentException($"Word must be hiragana or katakana only (word={word})");
+            }
+        }
+
+        /// <summary>
+        /// 文字列をしりとり処理用に正規化する。
+        /// </summary>
+        /// <param name="s">正規化する文字列。</param>
+        /// <returns>正規化した文字列。</returns>
+        private string ToNormalize(string s)
+        {
+            // 半角/全角カタカナをひらがなに
+            return s != null ? Strings.StrConv(s, VbStrConv.Wide | VbStrConv.Hiragana) : null;
+        }
+
+        /// <summary>
+        /// しりとり的な最後の文字を取得する。
+        /// </summary>
+        /// <param name="word">単語。※正規化済</param>
+        /// <returns>最後の文字。</returns>
+        private char GetLastChar(string word)
+        {
+            // 小文字を大文字に、「を」は「お」扱い、ハイフン以外で
+            var last = word.Where(c => c != 'ー' && c != '－').Last();
+            if (last == 'を')
+            {
+                return 'お';
+            }
+            else if (this.HiraganaLowerAndUpper.TryGetValue(last, out char upper))
+            {
+                return upper;
+            }
+
+            return last;
         }
 
         #endregion

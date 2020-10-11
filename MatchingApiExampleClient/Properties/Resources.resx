@@ -121,4 +121,16 @@
     <value>Error</value>
     <comment>エラーダイアログのタイトル</comment>
   </data>
+  <data name="WarningMessageGreaterThan" xml:space="preserve">
+    <value>{0}以上の値を入力してください</value>
+    <comment>数値範囲のバリデーションメッセージ</comment>
+  </data>
+  <data name="WarningMessageInvalidUri" xml:space="preserve">
+    <value>URIを入力してください</value>
+    <comment>URIのバリデーションメッセージ</comment>
+  </data>
+  <data name="WarningMessageRequire" xml:space="preserve">
+    <value>値を入力してください</value>
+    <comment>必須項目のバリデーションメッセージ</comment>
+  </data>
 </root>

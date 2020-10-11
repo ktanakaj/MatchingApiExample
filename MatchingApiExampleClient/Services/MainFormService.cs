@@ -112,7 +112,15 @@ namespace Honememo.MatchingApiExample.Client.Services
             // 部屋に入っている場合は抜ける
             if (this.matchingService != null)
             {
-                this.matchingService.LeaveRoom(new Empty());
+                try
+                {
+                    this.matchingService.LeaveRoom(new Empty());
+                }
+                catch (Exception e)
+                {
+                    // ここでエラーになってもどうしようもないのでデバッグログだけ。
+                    Debug.WriteLine(e);
+                }
             }
 
             // 接続済みのサービス等を解放する
@@ -131,15 +139,8 @@ namespace Honememo.MatchingApiExample.Client.Services
         /// </summary>
         public void Dispose()
         {
-            try
-            {
-                this.Disconnect();
-            }
-            catch (Exception e)
-            {
-                // Disposeが呼ばれる状況でエラーになってもどうしようもないのでデバッグログだけ。
-                Debug.WriteLine(e);
-            }
+            // 現状はDisconnectのエイリアス
+            this.Disconnect();
         }
 
         #endregion
