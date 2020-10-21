@@ -72,6 +72,9 @@ namespace Honememo.MatchingApiExample.Service
 
         #endregion
 
+        // TODO: ゲーム終了時にゲームを破棄する
+        // TODO: ゲーム終了時にプレイヤーのレーティングを更新する
+
         #region gRPCメソッド
 
         /// <summary>
@@ -81,10 +84,15 @@ namespace Honememo.MatchingApiExample.Service
         /// <param name="responseStream">レスポンス用のストリーム。</param>
         /// <param name="context">実行コンテキスト。</param>
         /// <returns>空レスポンス。</returns>
-        /// <exception cref="InvalidArgumentException">プレイヤーが二人未満の場合。</exception>
+        /// <exception cref="FailedPreconditionException">ルームが定員でない場合。</exception>
         public override async Task Ready(Empty request, IServerStreamWriter<GameEventReply> responseStream, ServerCallContext context)
         {
             var room = this.GetRoom(context);
+            if (!room.IsFull())
+            {
+                throw new FailedPreconditionException($"Room No={room.No} is not full");
+            }
+
             Shiritori game;
             lock (room)
             {
@@ -115,6 +123,7 @@ namespace Honememo.MatchingApiExample.Service
         /// <param name="context">実行コンテキスト。</param>
         /// <returns>回答結果。</returns>
         /// <exception cref="FailedPreconditionException">プレイヤーの手番でない場合。</exception>
+        /// <exception cref="InvalidArgumentException">回答が空や対象外の文字列の場合。</exception>
         public override async Task<AnswerReply> Answer(AnswerRequest request, ServerCallContext context)
         {
             return new AnswerReply { Result = this.GetGame(context).Answer(context.GetPlayerId(), request.Word) };

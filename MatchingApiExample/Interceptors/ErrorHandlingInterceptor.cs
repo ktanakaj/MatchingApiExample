@@ -11,6 +11,7 @@
 namespace Honememo.MatchingApiExample.Service
 {
     using System;
+    using System.ComponentModel.DataAnnotations;
     using System.Threading.Tasks;
     using Grpc.Core;
     using Grpc.Core.Interceptors;
@@ -92,7 +93,11 @@ namespace Honememo.MatchingApiExample.Service
 
             // TODO: gRPCステータスコードとの対応は、ちゃんとやるならエラーコードマスタとか定義してそこから取る。
             //       マスタ定義するなら、通常例外の業務例外への変換とかもやる。
-            if (exception is AppException appEx)
+            if (exception is ValidationException)
+            {
+                status = StatusCode.InvalidArgument;
+            }
+            else if (exception is AppException appEx)
             {
                 switch (appEx.Code)
                 {

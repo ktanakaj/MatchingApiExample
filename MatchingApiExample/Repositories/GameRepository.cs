@@ -10,6 +10,7 @@
 
 namespace Honememo.MatchingApiExample.Repositories
 {
+    using System;
     using System.Collections.Generic;
     using Honememo.MatchingApiExample.Entities;
     using Honememo.MatchingApiExample.Exceptions;
@@ -84,8 +85,15 @@ namespace Honememo.MatchingApiExample.Repositories
         /// </summary>
         /// <param name="id">ゲームID。</param>
         /// <returns>削除成功の場合true、存在しない場合false。</returns>
+        /// <remarks>ゲームは<see cref="IDisposable.Dispose()"/>も呼ばれる。</remarks>
         public bool RemoveGame(string id)
         {
+            if (!this.TryGetGame(id, out IGame game))
+            {
+                return false;
+            }
+
+            game.Dispose();
             return this.games.Remove(id);
         }
 

@@ -15,6 +15,7 @@ namespace Honememo.MatchingApiExample.Entities
     using System.Collections.Immutable;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
     using Microsoft.VisualBasic;
     using Honememo.MatchingApiExample.Exceptions;
     using Honememo.MatchingApiExample.Protos;
@@ -26,30 +27,40 @@ namespace Honememo.MatchingApiExample.Entities
     /// しりとりゲームクラスはゲームのルールなどをモデル化したもの。
     /// メモリ上で管理される。エンティティにあるがDBとは紐づかない。
     /// </remarks>
-    public class Shiritori : IGame, IDisposable
+    public class Shiritori : IGame
     {
         #region 定数
 
         /// <summary>
+        /// 回答持ち時間（秒）。
+        /// </summary>
+        private const int InputLimit = 10;
+
+        /// <summary>
+        /// 一人のプレイヤーが可能な最大クレーム回数。
+        /// </summary>
+        private const int MaxClaims = 2;
+
+        /// <summary>
         /// ゲーム開始時に最初の文字の候補。
         /// </summary>
-        private const string FirstChars ="あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわ";
+        private const string FirstChars = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわ";
 
         /// <summary>
         /// ひらがなの小文字/大文字対応表。
         /// </summary>
-        private readonly IDictionary<char, char> HiraganaLowerAndUpper = new Dictionary<char, char>()
+        private readonly IDictionary<char, char> hiraganaLowerAndUpper = new Dictionary<char, char>()
         {
-            {'ぁ', 'あ'},
-            {'ぃ', 'い'},
-            {'ぅ', 'う'},
-            {'ぇ', 'え'},
-            {'ぉ', 'お'},
-            {'っ', 'つ'},
-            {'ゃ', 'や'},
-            {'ゅ', 'ゆ'},
-            {'ょ', 'よ'},
-            {'ゎ', 'わ'},
+            { 'ぁ', 'あ' },
+            { 'ぃ', 'い' },
+            { 'ぅ', 'う' },
+            { 'ぇ', 'え' },
+            { 'ぉ', 'お' },
+            { 'っ', 'つ' },
+            { 'ゃ', 'や' },
+            { 'ゅ', 'ゆ' },
+            { 'ょ', 'よ' },
+            { 'ゎ', 'わ' },
         };
 
         #endregion
@@ -99,7 +110,7 @@ namespace Honememo.MatchingApiExample.Entities
 
             // ※ スタートイベントはコンストラクタなので通知しようがないが一応記録
             this.PlayerIds = playerIds.ToImmutableList();
-            this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Start));
+            this.FireStartEvent();
         }
 
         #endregion
@@ -143,10 +154,16 @@ namespace Honememo.MatchingApiExample.Entities
         /// プレイヤーの準備を完了する。
         /// </summary>
         /// <param name="playerId">準備完了にするプレイヤー。</param>
+        /// <exception cref="FailedPreconditionException">プレイヤーがゲーム参加者ではない場合。</exception>
         public void Ready(int playerId)
         {
             lock (this.lockObj)
             {
+                if (!this.PlayerIds.Contains(playerId))
+                {
+                    throw new FailedPreconditionException($"Player ID={playerId} is not joined in Game ID={this.Id}");
+                }
+
                 // 念のため、既に準備完了済で呼ばれた場合は無視する
                 this.ThrowExceptionIfDisposed();
                 if (this.IsReady(playerId))
@@ -155,12 +172,12 @@ namespace Honememo.MatchingApiExample.Entities
                 }
 
                 // 準備完了イベントを起こす
-                this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Ready) { PlayerId = playerId });
+                this.FireReadyEvent(playerId);
 
                 // 全員が準備完了になったら、最初のプレイヤーに手番を振る
                 if (this.IsReady())
                 {
-                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Input) { PlayerId = this.PlayerIds.First(), Word = this.RandomFirstChar().ToString() });
+                    this.NextTurn(this.PlayerIds.First(), this.RandomFirstChar());
                 }
             }
         }
@@ -172,15 +189,14 @@ namespace Honememo.MatchingApiExample.Entities
         /// <param name="word">回答した単語。</param>
         /// <returns>回答の結果。</returns>
         /// <exception cref="FailedPreconditionException">プレイヤーの手番でない場合。</exception>
-        /// <exception cref="InvalidArgumentException">回答が空の場合。</exception>
+        /// <exception cref="InvalidArgumentException">回答が空や対象外の文字列の場合。</exception>
         /// <remarks>回答結果は戻り値とイベントで返す。</remarks>
         public ShiritoriResult Answer(int playerId, string word)
         {
             lock (this.lockObj)
             {
                 // 自分に手番が来ていない場合はエラー
-                var input = this.GetInputTurn();
-                if (input.PlayerId != playerId)
+                if (!this.TryGetInputTurn(out GameEventArgs input) || input.PlayerId != playerId)
                 {
                     throw new FailedPreconditionException($"Player ID={playerId} is not turn");
                 }
@@ -198,21 +214,19 @@ namespace Honememo.MatchingApiExample.Entities
                     result = w.EndsWith('ん') ? ShiritoriResult.Gameover : ShiritoriResult.Ok;
                 }
 
-                this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Answer) { PlayerId = playerId, Word = word, Result = result });
+                this.FireAnswerEvent(playerId, word, result);
 
                 if (result == ShiritoriResult.Ok)
                 {
                     // 正解の場合、次のプレイヤーの手番にする
-                    // TODO: limitになったらタイムアウトするようにする
                     this.usedWords.Add(w);
                     var i = this.PlayerIds.IndexOf(playerId);
-                    var next = i + 1 < this.PlayerIds.Count() ? this.PlayerIds[i + 1] : this.PlayerIds[0];
-                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Input) { PlayerId = next, Word = this.GetLastChar(w).ToString(), Limit = DateTimeOffset.Now.AddSeconds(10), });
+                    this.NextTurn(i + 1 < this.PlayerIds.Count() ? this.PlayerIds[i + 1] : this.PlayerIds[0], this.GetLastChar(w));
                 }
                 else if (result == ShiritoriResult.Gameover)
                 {
                     // ゲームオーバーの場合、ゲームを終了する
-                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.End));
+                    this.FireEndEvent();
                 }
 
                 return result;
@@ -223,16 +237,33 @@ namespace Honememo.MatchingApiExample.Entities
         /// 直前の他人の回答へ異議を申し立てる。
         /// </summary>
         /// <param name="playerId">異議を唱えたプレイヤーのID。</param>
+        /// <exception cref="FailedPreconditionException">異議の対象が自分の回答の場合。</exception>
+        /// <remarks>
+        /// 単語のチェックを行わない代償として、もし不満に思ったプレイヤーが居たら異議を申し立ててもらう。
+        /// 一定回数同じプレイヤーから異議が申し立てられたら、ゲーム不成立として引き分け。
+        /// </remarks>
         public void Claim(int playerId)
         {
             lock (this.lockObj)
             {
-                // 単語のチェックを行わない代償として、もし不満に思ったプレイヤーが居たら異議を申し立ててもらう。
-                // 一定回数同じプレイヤーから異議が申し立てられたら、ゲーム不成立として引き分け。
-                // TODO: 遡れる回数のチェックなど入れる
-                this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Claim) { PlayerId = playerId });
+                // 一つ前の手番を取得。対象かチェック
+                if (!this.TryGetInputTurn(1, out GameEventArgs input) || input.PlayerId == playerId)
+                {
+                    throw new FailedPreconditionException($"Claim is not available");
+                }
 
-                // TODO: 前回の手番に戻す
+                // 異議を通知
+                this.FireClaimEvent(playerId);
+
+                // 一定回数同じプレイヤーから異議が申し立てられたら、ゲーム不成立として引き分け
+                if (this.CountClaims(playerId) >= MaxClaims)
+                {
+                    this.FireAbortEvent();
+                    return;
+                }
+
+                // それ以外は、前回の手番に戻す
+                this.NextTurn(input.PlayerId.Value, input.Word.Last());
             }
         }
 
@@ -245,7 +276,7 @@ namespace Honememo.MatchingApiExample.Entities
             {
                 if (!this.Disposed)
                 {
-                    this.FireGameEvent(new GameEventArgs(ShiritoriEventType.Abort));
+                    this.FireAbortEvent();
                 }
             }
 
@@ -255,29 +286,7 @@ namespace Honememo.MatchingApiExample.Entities
 
         #endregion
 
-        #region 内部メソッド
-
-        /// <summary>
-        /// 現在の回答者の情報を取得する。
-        /// </summary>
-        /// <returns>回答者の情報。</returns>
-        /// <exception cref="InvalidOperationException">ゲームが進行中でない場合。</exception>
-        private GameEventArgs GetInputTurn()
-        {
-            foreach (var e in this.events.Reverse())
-            {
-                if (e.Type == ShiritoriEventType.End)
-                {
-                    break;
-                }
-                else if (e.Type == ShiritoriEventType.Input)
-                {
-                    return e;
-                }
-            }
-
-            throw new InvalidOperationException("Game is not started");
-        }
+        #region ゲーム状態に関するメソッド
 
         /// <summary>
         /// ゲームが破棄済みの場合例外を投げる。
@@ -288,19 +297,6 @@ namespace Honememo.MatchingApiExample.Entities
             if (this.Disposed)
             {
                 throw new ObjectDisposedException($"Game ID={this.Id} is disposed");
-            }
-        }
-
-        /// <summary>
-        /// ゲームイベントを発生させる。
-        /// </summary>
-        /// <param name="e">発生させるイベント。nullの場合無視。</param>
-        private void FireGameEvent(GameEventArgs e)
-        {
-            if (e != null)
-            {
-                this.events.Add(e);
-                this.OnGameEvent?.Invoke(this, e);
             }
         }
 
@@ -326,6 +322,91 @@ namespace Honememo.MatchingApiExample.Entities
         }
 
         /// <summary>
+        /// プレイヤーの異議申立の回数を集計する。
+        /// </summary>
+        /// <param name="playerId">集計するプレイヤーのID。</param>
+        /// <returns>合計申立回数。</returns>
+        private int CountClaims(int playerId)
+        {
+            return this.events.Count(e => e.Type == ShiritoriEventType.Claim && e.PlayerId == playerId);
+        }
+
+        #endregion
+
+        #region ターン操作用メソッド
+
+        /// <summary>
+        /// 現在の回答者の情報を取得する。
+        /// </summary>
+        /// <param name="input">回答者の情報。</param>
+        /// <returns>取得できた場合true。</returns>
+        private bool TryGetInputTurn(out GameEventArgs input)
+        {
+            return this.TryGetInputTurn(0, out input);
+        }
+
+        /// <summary>
+        /// 回答者の情報を取得する。
+        /// </summary>
+        /// <param name="prev">過去の回答者の場合、何回前か。※0が最新</param>
+        /// <param name="input">回答者の情報。</param>
+        /// <returns>取得できた場合true。</returns>
+        private bool TryGetInputTurn(int prev, out GameEventArgs input)
+        {
+            input = null;
+            foreach (var e in this.events.Reverse())
+            {
+                if (e.Type == ShiritoriEventType.End)
+                {
+                    return false;
+                }
+                else if (e.Type == ShiritoriEventType.Claim)
+                {
+                    ++prev;
+                }
+                else if (e.Type == ShiritoriEventType.Input && prev-- <= 0)
+                {
+                    input = e;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 次のターンを開始する。
+        /// </summary>
+        /// <param name="playerId">回答するプレイヤーのID。</param>
+        /// <param name="startChar">次の単語の先頭文字。</param>
+        private void NextTurn(int playerId, char startChar)
+        {
+            var e = this.FireInputEvent(playerId, startChar, DateTimeOffset.Now.AddSeconds(InputLimit));
+            this.CheckInputLimit(e);
+        }
+
+        /// <summary>
+        /// 回答の制限時間をチェックする。
+        /// </summary>
+        /// <param name="e">入力イベント。</param>
+        private async void CheckInputLimit(GameEventArgs e)
+        {
+            await Task.Delay(e.Limit.Value - DateTimeOffset.Now);
+            lock (this.lockObj)
+            {
+                if (this.TryGetInputTurn(out GameEventArgs input) && input == e)
+                {
+                    this.FireAnswerEvent(e.PlayerId.Value, string.Empty, ShiritoriResult.Gameover);
+                    this.FireEndEvent();
+                }
+            }
+        }
+
+        #endregion
+
+        #region 単語処理系メソッド
+
+        /// <summary>
         /// ゲームスタート時に使う最初の文字を抽選する。
         /// </summary>
         /// <returns>抽選した文字。</returns>
@@ -338,7 +419,7 @@ namespace Honememo.MatchingApiExample.Entities
         /// <summary>
         /// 入力された単語をバリデーションする。
         /// </summary>
-        /// <param name="s">チェックする文字列。※正規化済</param>
+        /// <param name="word">チェックする文字列。※正規化済</param>
         /// <exception cref="InvalidArgumentException">回答がバリデーションNGの場合。</exception>
         /// <remarks>回答としてNGではなく、そもそも引数として渡されるべきではないものをチェックする。</remarks>
         private void ValidateWord(string word)
@@ -382,12 +463,115 @@ namespace Honememo.MatchingApiExample.Entities
             {
                 return 'お';
             }
-            else if (this.HiraganaLowerAndUpper.TryGetValue(last, out char upper))
+            else if (this.hiraganaLowerAndUpper.TryGetValue(last, out char upper))
             {
                 return upper;
             }
 
             return last;
+        }
+
+        #endregion
+
+        #region イベント発生メソッド
+
+        /// <summary>
+        /// ゲーム開始イベントを発生させる。
+        /// </summary>
+        /// <returns>発生したイベント。</returns>
+        private GameEventArgs FireStartEvent()
+        {
+            var e = new GameEventArgs(ShiritoriEventType.Start);
+            this.FireGameEvent(e);
+            return e;
+        }
+
+        /// <summary>
+        /// 準備完了イベントを発生させる。
+        /// </summary>
+        /// <param name="playerId">準備が完了したプレイヤーのID。</param>
+        /// <returns>発生したイベント。</returns>
+        private GameEventArgs FireReadyEvent(int playerId)
+        {
+            var e = new GameEventArgs(ShiritoriEventType.Ready) { PlayerId = playerId };
+            this.FireGameEvent(e);
+            return e;
+        }
+
+        /// <summary>
+        /// 入力イベントを発生させる。
+        /// </summary>
+        /// <param name="playerId">入力するプレイヤーのID。</param>
+        /// <param name="startChar">次のしりとりの文字。</param>
+        /// <param name="limit">制限時間。</param>
+        /// <returns>発生したイベント。</returns>
+        private GameEventArgs FireInputEvent(int playerId, char startChar, DateTimeOffset limit)
+        {
+            var e = new GameEventArgs(ShiritoriEventType.Input) { PlayerId = playerId, Word = startChar.ToString(), Limit = limit };
+            this.FireGameEvent(e);
+            return e;
+        }
+
+        /// <summary>
+        /// 回答イベントを発生させる。
+        /// </summary>
+        /// <param name="playerId">回答したプレイヤーのID。</param>
+        /// <param name="word">回答した単語。</param>
+        /// <param name="result">回答の結果。</param>
+        /// <returns>発生したイベント。</returns>
+        private GameEventArgs FireAnswerEvent(int playerId, string word, ShiritoriResult result)
+        {
+            var e = new GameEventArgs(ShiritoriEventType.Answer) { PlayerId = playerId, Word = word, Result = result };
+            this.FireGameEvent(e);
+            return e;
+        }
+
+        /// <summary>
+        /// 異議申立イベントを発生させる。
+        /// </summary>
+        /// <param name="playerId">異議を送信したプレイヤーのID。</param>
+        /// <returns>発生したイベント。</returns>
+        private GameEventArgs FireClaimEvent(int playerId)
+        {
+            var e = new GameEventArgs(ShiritoriEventType.Claim) { PlayerId = playerId };
+            this.FireGameEvent(e);
+            return e;
+        }
+
+        /// <summary>
+        /// ゲーム終了イベントを発生させる。
+        /// </summary>
+        /// <returns>発生したイベント。</returns>
+        private GameEventArgs FireEndEvent()
+        {
+            var e = new GameEventArgs(ShiritoriEventType.End);
+            this.FireGameEvent(e);
+            return e;
+        }
+
+        /// <summary>
+        /// ゲーム中止イベントを発生させる。
+        /// </summary>
+        /// <returns>発生したイベント。</returns>
+        private GameEventArgs FireAbortEvent()
+        {
+            var e = new GameEventArgs(ShiritoriEventType.Abort);
+            this.FireGameEvent(e);
+            return e;
+        }
+
+        /// <summary>
+        /// ゲームイベントを発生させる。
+        /// </summary>
+        /// <param name="e">発生させるイベント。nullの場合無視。</param>
+        private void FireGameEvent(GameEventArgs e)
+        {
+            // 発火させるだけでなく、履歴にも登録する
+            if (e != null)
+            {
+                this.events.Add(e);
+                this.OnGameEvent?.Invoke(this, e);
+            }
         }
 
         #endregion

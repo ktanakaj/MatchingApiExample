@@ -75,6 +75,8 @@ message FindRoomsReply {
 message GetRoomReply {
   // 部屋番号。
   uint32 no = 1;
+  // 最大人数。
+  uint32 max_players = 2;
   // 参加プレイヤーのリスト。
-  repeated PlayerInfo players = 2;
+  repeated PlayerInfo players = 3;
 }

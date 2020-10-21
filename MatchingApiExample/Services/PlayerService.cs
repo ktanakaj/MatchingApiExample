@@ -12,6 +12,7 @@ namespace Honememo.MatchingApiExample.Service
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
     using System.Security.Claims;
     using System.Threading.Tasks;
     using AutoMapper;
@@ -25,6 +26,7 @@ namespace Honememo.MatchingApiExample.Service
     using Honememo.MatchingApiExample.Protos;
     using Honememo.MatchingApiExample.Repositories;
     using Player = Entities.Player;
+    using ValidationContext = System.ComponentModel.DataAnnotations.ValidationContext;
 
     /// <summary>
     /// プレイヤー関連サービス。
@@ -77,7 +79,7 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>登録したプレイヤー情報。</returns>
         public override async Task<PlayerInfo> SignUp(SignUpRequest request, ServerCallContext context)
         {
-            // TODO: 空チェック、重複チェック
+            Validator.ValidateObject(request, new ValidationContext(request));
             var player = this.mapper.Map<Player>(request);
             player.Name = "(empty)";
             player.LastLogin = DateTimeOffset.UtcNow;
@@ -94,7 +96,6 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>認証したプレイヤー情報。</returns>
         public override async Task<PlayerInfo> SignIn(SignInRequest request, ServerCallContext context)
         {
-            // TODO: 空チェック
             var player = await this.playerRepository.Find(request.Id);
             if (player == null || player.Token != request.Token)
             {
@@ -128,7 +129,7 @@ namespace Honememo.MatchingApiExample.Service
         [Authorize]
         public override async Task<PlayerInfo> ChangeMe(ChangeMeRequest request, ServerCallContext context)
         {
-            // TODO: 空チェック
+            Validator.ValidateObject(request, new ValidationContext(request));
             var player = await this.playerRepository.FindOrFail(context.GetPlayerId());
             this.mapper.Map(request, player);
             return this.mapper.Map<PlayerInfo>(await this.playerRepository.Update(player));

@@ -400,7 +400,7 @@ namespace Honememo.MatchingApiExample.Client
                 this.listViewMemberList.Items.Add(new ListViewItem(player.Name));
             }
 
-            this.buttonShiritori.Enabled = e.Players.Count >= 2;
+            this.buttonShiritori.Enabled = e.Players.Count >= e.MaxPlayers;
         }
 
         #endregion

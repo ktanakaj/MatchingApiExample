@@ -10,10 +10,12 @@
 
 namespace Honememo.MatchingApiExample.Entities
 {
+    using System;
+
     /// <summary>
     /// 各種ゲーム用の基底インタフェース。
     /// </summary>
-    public interface IGame
+    public interface IGame : IDisposable
     {
         #region プロパティ
 

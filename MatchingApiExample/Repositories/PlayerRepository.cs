@@ -59,7 +59,7 @@ namespace Honememo.MatchingApiExample.Repositories
         /// <summary>
         /// プレイヤーIDでプレイヤーを取得する。
         /// </summary>
-        /// <param name="id">プレイヤーID。</param>
+        /// <param name="ids">プレイヤーID。</param>
         /// <returns>プレイヤー。</returns>
         public async Task<IList<Player>> Find(ICollection<int> ids)
         {
