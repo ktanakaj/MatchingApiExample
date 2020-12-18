@@ -8,7 +8,7 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-namespace Honememo.MatchingApiExample.Service
+namespace Honememo.MatchingApiExample.Services
 {
     using System;
     using System.Threading.Tasks;

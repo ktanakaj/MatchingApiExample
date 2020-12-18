@@ -22,8 +22,9 @@ namespace Honememo.MatchingApiExample
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Honememo.MatchingApiExample.Entities;
+    using Honememo.MatchingApiExample.Interceptors;
     using Honememo.MatchingApiExample.Repositories;
-    using Honememo.MatchingApiExample.Service;
+    using Honememo.MatchingApiExample.Services;
 
     /// <summary>
     /// Webアプリケーション初期設定用のクラスです。
@@ -80,6 +81,7 @@ namespace Honememo.MatchingApiExample
             services.AddGrpc(options =>
             {
                 options.Interceptors.Add<ErrorHandlingInterceptor>();
+                options.Interceptors.Add<ValidationInterceptor>();
             });
 
             // 認証設定（Cookieを使うわけでは無いが、手動での認証のため便宜上Cookie扱い）

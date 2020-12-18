@@ -8,7 +8,7 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-namespace Honememo.MatchingApiExample.Service
+namespace Honememo.MatchingApiExample.Services
 {
     using System;
     using System.Collections.Generic;
@@ -25,7 +25,6 @@ namespace Honememo.MatchingApiExample.Service
     using Honememo.MatchingApiExample.Protos;
     using Honememo.MatchingApiExample.Repositories;
     using Player = Entities.Player;
-    using ValidationContext = System.ComponentModel.DataAnnotations.ValidationContext;
 
     /// <summary>
     /// マッチングサービス。
@@ -127,7 +126,6 @@ namespace Honememo.MatchingApiExample.Service
         public override async Task<CreateRoomReply> CreateRoom(CreateRoomRequest request, ServerCallContext context)
         {
             var player = await this.playerRepository.FindOrFail(context.GetPlayerId());
-            Validator.ValidateObject(request, new ValidationContext(request));
             if (this.roomRepository.TryGetRoomByPlayerId(player.Id, out Room room))
             {
                 throw new AlreadyExistsException($"Player ID={player.Id} is already exists in the Room No={room.No}");

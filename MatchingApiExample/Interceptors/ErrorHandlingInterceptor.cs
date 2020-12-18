@@ -8,7 +8,7 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-namespace Honememo.MatchingApiExample.Service
+namespace Honememo.MatchingApiExample.Interceptors
 {
     using System;
     using System.ComponentModel.DataAnnotations;

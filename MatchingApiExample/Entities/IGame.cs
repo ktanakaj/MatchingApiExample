@@ -15,6 +15,11 @@ namespace Honememo.MatchingApiExample.Entities
     /// <summary>
     /// 各種ゲーム用の基底インタフェース。
     /// </summary>
+    /// <remarks>
+    /// ゲームロジックと部屋はモデル上で別々に分かれているが、
+    /// あくまで実装を整理/抽象化するためのもので、
+    /// 複数のゲームに対応しているわけではないので注意。
+    /// </remarks>
     public interface IGame : IDisposable
     {
         #region プロパティ

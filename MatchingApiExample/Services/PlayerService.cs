@@ -8,7 +8,7 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-namespace Honememo.MatchingApiExample.Service
+namespace Honememo.MatchingApiExample.Services
 {
     using System;
     using System.Collections.Generic;
@@ -26,7 +26,6 @@ namespace Honememo.MatchingApiExample.Service
     using Honememo.MatchingApiExample.Protos;
     using Honememo.MatchingApiExample.Repositories;
     using Player = Entities.Player;
-    using ValidationContext = System.ComponentModel.DataAnnotations.ValidationContext;
 
     /// <summary>
     /// プレイヤー関連サービス。
@@ -79,7 +78,6 @@ namespace Honememo.MatchingApiExample.Service
         /// <returns>登録したプレイヤー情報。</returns>
         public override async Task<PlayerInfo> SignUp(SignUpRequest request, ServerCallContext context)
         {
-            Validator.ValidateObject(request, new ValidationContext(request));
             var player = this.mapper.Map<Player>(request);
             player.Name = "(empty)";
             player.LastLogin = DateTimeOffset.UtcNow;
@@ -129,7 +127,6 @@ namespace Honememo.MatchingApiExample.Service
         [Authorize]
         public override async Task<PlayerInfo> ChangeMe(ChangeMeRequest request, ServerCallContext context)
         {
-            Validator.ValidateObject(request, new ValidationContext(request));
             var player = await this.playerRepository.FindOrFail(context.GetPlayerId());
             this.mapper.Map(request, player);
             return this.mapper.Map<PlayerInfo>(await this.playerRepository.Update(player));
