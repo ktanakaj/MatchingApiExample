@@ -89,7 +89,7 @@ namespace Honememo.MatchingApiExample.Entities
         /// </summary>
         /// <remarks>
         /// リストは読み取り専用です。更新する場合は
-        /// <see cref="AddPlayer(int)"/>, <see cref="RemovePlayer(int)"/>
+        /// <see cref="AddPlayer(Player)"/>, <see cref="RemovePlayer(Player)"/>
         /// のメソッドを呼んでください。
         /// </remarks>
         public IList<int> PlayerIds

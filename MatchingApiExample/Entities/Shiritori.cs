@@ -16,9 +16,9 @@ namespace Honememo.MatchingApiExample.Entities
     using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
-    using Microsoft.VisualBasic;
     using Honememo.MatchingApiExample.Exceptions;
     using Honememo.MatchingApiExample.Protos;
+    using Microsoft.VisualBasic;
 
     /// <summary>
     /// しりとりゲームのデータ等を扱うクラス。

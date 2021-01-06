@@ -36,6 +36,7 @@ namespace Honememo.MatchingApiExample.Client
         /// <summary>
         /// 画面を生成する。
         /// </summary>
+        /// <param name="channel">gRPCチャネル。</param>
         public ShiritoriForm(GrpcChannel channel)
         {
             this.InitializeComponent();

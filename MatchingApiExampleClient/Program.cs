@@ -18,13 +18,13 @@ namespace Honememo.MatchingApiExample.Client
     /// <summary>
     /// アプリケーション起動時に最初に呼ばれるクラスです。
     /// </summary>
-    static class Program
+    public static class Program
     {
         /// <summary>
         /// アプリケーションのメインエントリポイントです。
         /// </summary>
         [STAThread]
-        static void Main()
+        public static void Main()
         {
             Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
             Application.SetHighDpiMode(HighDpiMode.SystemAware);

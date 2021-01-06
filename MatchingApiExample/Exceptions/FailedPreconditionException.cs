@@ -22,7 +22,8 @@ namespace Honememo.MatchingApiExample.Exceptions
         /// </summary>
         /// <param name="message">エラーメッセージ。</param>
         /// <param name="innerException">発生元の例外。</param>
-        public FailedPreconditionException(string message, Exception innerException = null) : base(message, "FAILED_PRECONDITION", innerException)
+        public FailedPreconditionException(string message, Exception innerException = null)
+            : base(message, "FAILED_PRECONDITION", innerException)
         {
         }
     }

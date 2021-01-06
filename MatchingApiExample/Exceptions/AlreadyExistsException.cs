@@ -22,7 +22,8 @@ namespace Honememo.MatchingApiExample.Exceptions
         /// </summary>
         /// <param name="message">エラーメッセージ。</param>
         /// <param name="data">エラーの追加情報。</param>
-        public AlreadyExistsException(string message, System.Collections.IDictionary data = null) : base(message, "ALREADY_EXISTS", data)
+        public AlreadyExistsException(string message, System.Collections.IDictionary data = null)
+            : base(message, "ALREADY_EXISTS", data)
         {
         }
     }

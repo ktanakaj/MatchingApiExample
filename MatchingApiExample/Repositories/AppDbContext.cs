@@ -15,9 +15,9 @@ namespace Honememo.MatchingApiExample.Repositories
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using Honememo.MatchingApiExample.Entities;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Storage;
-    using Honememo.MatchingApiExample.Entities;
 
     /// <summary>
     /// アプリケーションDBコンテキストクラス。
@@ -111,7 +111,7 @@ namespace Honememo.MatchingApiExample.Repositories
         /// </summary>
         private void TouchChangedEntities()
         {
-            var entities = ChangeTracker.Entries()
+            var entities = this.ChangeTracker.Entries()
                 .Where(x => x.Entity is IHasTimestamp && (x.State == EntityState.Added || x.State == EntityState.Modified));
 
             var now = DateTimeOffset.UtcNow;

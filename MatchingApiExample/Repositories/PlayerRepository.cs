@@ -14,9 +14,9 @@ namespace Honememo.MatchingApiExample.Repositories
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Microsoft.EntityFrameworkCore;
     using Honememo.MatchingApiExample.Entities;
     using Honememo.MatchingApiExample.Exceptions;
+    using Microsoft.EntityFrameworkCore;
 
     /// <summary>
     /// プレイヤーリポジトリクラス。

@@ -11,6 +11,10 @@
 namespace Honememo.MatchingApiExample
 {
     using AutoMapper;
+    using Honememo.MatchingApiExample.Entities;
+    using Honememo.MatchingApiExample.Interceptors;
+    using Honememo.MatchingApiExample.Repositories;
+    using Honememo.MatchingApiExample.Services;
     using Microsoft.AspNetCore.Authentication.Cookies;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -21,10 +25,6 @@ namespace Honememo.MatchingApiExample
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
-    using Honememo.MatchingApiExample.Entities;
-    using Honememo.MatchingApiExample.Interceptors;
-    using Honememo.MatchingApiExample.Repositories;
-    using Honememo.MatchingApiExample.Services;
 
     /// <summary>
     /// Webアプリケーション初期設定用のクラスです。

@@ -15,8 +15,8 @@ namespace Honememo.MatchingApiExample.Interceptors
     using System.Threading.Tasks;
     using Grpc.Core;
     using Grpc.Core.Interceptors;
-    using Microsoft.Extensions.Logging;
     using Honememo.MatchingApiExample.Exceptions;
+    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// エラー処理gRPCインターセプタークラス。

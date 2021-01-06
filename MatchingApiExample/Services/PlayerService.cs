@@ -12,20 +12,19 @@ namespace Honememo.MatchingApiExample.Services
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
     using System.Security.Claims;
     using System.Threading.Tasks;
     using AutoMapper;
     using Google.Protobuf.WellKnownTypes;
     using Grpc.Core;
+    using Honememo.MatchingApiExample.Exceptions;
+    using Honememo.MatchingApiExample.Protos;
+    using Honememo.MatchingApiExample.Repositories;
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Authentication.Cookies;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.Extensions.Logging;
-    using Honememo.MatchingApiExample.Exceptions;
-    using Honememo.MatchingApiExample.Protos;
-    using Honememo.MatchingApiExample.Repositories;
-    using Player = Entities.Player;
+    using Player = Honememo.MatchingApiExample.Entities.Player;
 
     /// <summary>
     /// プレイヤー関連サービス。

@@ -53,6 +53,7 @@ namespace Honememo.MatchingApiExample.Client.Services
         /// <summary>
         /// 接続済みのgRPCチャネルを使用するサービスを生成する。
         /// </summary>
+        /// <param name="channel">gRPCチャネル。</param>
         public ShiritoriFormService(GrpcChannel channel)
         {
             this.channel = channel;

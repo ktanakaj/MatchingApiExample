@@ -15,13 +15,13 @@ namespace Honememo.MatchingApiExample.Services
     using AutoMapper;
     using Google.Protobuf.WellKnownTypes;
     using Grpc.Core;
-    using Microsoft.AspNetCore.Authorization;
-    using Microsoft.Extensions.Logging;
     using Honememo.MatchingApiExample.Entities;
     using Honememo.MatchingApiExample.Exceptions;
     using Honememo.MatchingApiExample.Protos;
     using Honememo.MatchingApiExample.Repositories;
-    using Shiritori = Entities.Shiritori;
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.Extensions.Logging;
+    using Shiritori = Honememo.MatchingApiExample.Entities.Shiritori;
 
     /// <summary>
     /// しりとりゲームサービス。
@@ -72,8 +72,8 @@ namespace Honememo.MatchingApiExample.Services
 
         #endregion
 
-        // TODO: ゲーム終了時にゲームを破棄する
-        // TODO: ゲーム終了時にプレイヤーのレーティングを更新する
+        //// TODO: ゲーム終了時にゲームを破棄する
+        //// TODO: ゲーム終了時にプレイヤーのレーティングを更新する
 
         #region gRPCメソッド
 
