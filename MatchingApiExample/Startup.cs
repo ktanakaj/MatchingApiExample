@@ -10,11 +10,15 @@
 
 namespace Honememo.MatchingApiExample
 {
+    using System;
+    using System.Net;
+    using System.Threading.Tasks;
     using AutoMapper;
     using Honememo.MatchingApiExample.Entities;
     using Honememo.MatchingApiExample.Interceptors;
     using Honememo.MatchingApiExample.Repositories;
     using Honememo.MatchingApiExample.Services;
+    using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Authentication.Cookies;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -85,7 +89,12 @@ namespace Honememo.MatchingApiExample
             });
 
             // 認証設定（Cookieを使うわけでは無いが、手動での認証のため便宜上Cookie扱い）
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.Events.OnRedirectToAccessDenied = ReplaceRedirector(HttpStatusCode.Forbidden);
+                    options.Events.OnRedirectToLogin = ReplaceRedirector(HttpStatusCode.Unauthorized);
+                });
             services.AddAuthorization();
 
             // DI設定
@@ -153,6 +162,20 @@ namespace Honememo.MatchingApiExample
             }
 
             return builder;
+        }
+
+        /// <summary>
+        /// 認証のリダイレクトをHTTPステータスコードに差し替える。
+        /// </summary>
+        /// <param name="statusCode">返すHTTPステータスコード。</param>
+        /// <returns>差し替え用のファンクション。</returns>
+        private static Func<RedirectContext<CookieAuthenticationOptions>, Task> ReplaceRedirector(HttpStatusCode statusCode)
+        {
+            return context =>
+            {
+                context.Response.StatusCode = (int)statusCode;
+                return Task.CompletedTask;
+            };
         }
 
         #endregion
