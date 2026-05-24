@@ -4,7 +4,7 @@ gRPCの勉強用にASP.NET Coreで作成したサンプルアプリです。
 ごく簡単なマッチングAPIを提供します。
 
 ## 開発環境
-* Visual Studio 2022 Community - 統合開発環境
+* Visual Studio 2026 Community - 統合開発環境
 
 ## 実行方法
 Visual Studioでのデバッグ実行、またはVisual Studioでビルドして生成したバイナリを実行できます。

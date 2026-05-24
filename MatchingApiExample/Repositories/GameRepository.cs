@@ -3,100 +3,91 @@
 //      ゲームリポジトリクラスソース</summary>
 //
 // <copyright file="GameRepository.cs">
-//      Copyright (C) 2020 Koichi Tanaka. All rights reserved.</copyright>
+//      Copyright (C) 2026 Koichi Tanaka. All rights reserved.</copyright>
 // <author>
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-namespace Honememo.MatchingApiExample.Repositories
+using System;
+using System.Collections.Generic;
+using Honememo.MatchingApiExample.Entities;
+using Honememo.MatchingApiExample.Exceptions;
+
+namespace Honememo.MatchingApiExample.Repositories;
+
+/// <summary>
+/// ゲームリポジトリ。
+/// </summary>
+/// <remarks>
+/// 各種ゲームをメモリ上で管理するもの。
+/// メモリ上で処理するため、シングルトンなどで用いてください。
+/// </remarks>
+public class GameRepository
 {
-    using System;
-    using System.Collections.Generic;
-    using Honememo.MatchingApiExample.Entities;
-    using Honememo.MatchingApiExample.Exceptions;
+    /// <summary>
+    /// ゲームIDとインスタンスのマップ。
+    /// </summary>
+    private readonly IDictionary<string, IGame> games = new Dictionary<string, IGame>();
 
     /// <summary>
-    /// ゲームリポジトリ。
+    /// 全ゲームを取得する。
     /// </summary>
-    /// <remarks>
-    /// 各種ゲームをメモリ上で管理するもの。
-    /// メモリ上で処理するため、シングルトンなどで用いてください。
-    /// </remarks>
-    public class GameRepository
+    /// <returns>ゲームコレクション。</returns>
+    public ICollection<IGame> GetGames()
     {
-        #region メンバー変数
+        return this.games.Values;
+    }
 
-        /// <summary>
-        /// ゲームIDとインスタンスのマップ。
-        /// </summary>
-        private readonly IDictionary<string, IGame> games = new Dictionary<string, IGame>();
+    /// <summary>
+    /// ゲームを取得する。
+    /// </summary>
+    /// <param name="id">ゲームID。</param>
+    /// <param name="game">取得したゲーム。</param>
+    /// <returns>取得できた場合true。</returns>
+    public bool TryGetGame(string id, out IGame game)
+    {
+        return this.games.TryGetValue(id, out game!);
+    }
 
-        #endregion
-
-        #region 公開メソッド
-
-        /// <summary>
-        /// 全ゲームを取得する。
-        /// </summary>
-        /// <returns>ゲームコレクション。</returns>
-        public ICollection<IGame> GetGames()
+    /// <summary>
+    /// ゲームを取得する。
+    /// </summary>
+    /// <param name="id">ゲームID。</param>
+    /// <returns>取得したゲーム。</returns>
+    /// <exception cref="NotFoundException">ゲームが登録されていない場合。</exception>
+    public IGame GetGame(string id)
+    {
+        if (!this.TryGetGame(id, out IGame game))
         {
-            return this.games.Values;
+            throw new NotFoundException($"Game Id={id} is not found");
         }
 
-        /// <summary>
-        /// ゲームを取得する。
-        /// </summary>
-        /// <param name="id">ゲームID。</param>
-        /// <param name="game">取得したゲーム。</param>
-        /// <returns>取得できた場合true。</returns>
-        public bool TryGetGame(string id, out IGame game)
+        return game;
+    }
+
+    /// <summary>
+    /// ゲームを登録する。
+    /// </summary>
+    /// <param name="game">登録するゲーム。</param>
+    public void AddGame(IGame game)
+    {
+        this.games[game.Id] = game;
+    }
+
+    /// <summary>
+    /// ゲームを取り除く。
+    /// </summary>
+    /// <param name="id">ゲームID。</param>
+    /// <returns>削除成功の場合true、存在しない場合false。</returns>
+    /// <remarks>ゲームは<see cref="IDisposable.Dispose()"/>も呼ばれる。</remarks>
+    public bool RemoveGame(string id)
+    {
+        if (!this.TryGetGame(id, out IGame game))
         {
-            return this.games.TryGetValue(id, out game);
+            return false;
         }
 
-        /// <summary>
-        /// ゲームを取得する。
-        /// </summary>
-        /// <param name="id">ゲームID。</param>
-        /// <returns>取得したゲーム。</returns>
-        /// <exception cref="NotFoundException">ゲームが登録されていない場合。</exception>
-        public IGame GetGame(string id)
-        {
-            if (!this.TryGetGame(id, out IGame game))
-            {
-                throw new NotFoundException($"Game Id={id} is not found");
-            }
-
-            return game;
-        }
-
-        /// <summary>
-        /// ゲームを登録する。
-        /// </summary>
-        /// <param name="game">登録するゲーム。</param>
-        public void AddGame(IGame game)
-        {
-            this.games[game.Id] = game;
-        }
-
-        /// <summary>
-        /// ゲームを取り除く。
-        /// </summary>
-        /// <param name="id">ゲームID。</param>
-        /// <returns>削除成功の場合true、存在しない場合false。</returns>
-        /// <remarks>ゲームは<see cref="IDisposable.Dispose()"/>も呼ばれる。</remarks>
-        public bool RemoveGame(string id)
-        {
-            if (!this.TryGetGame(id, out IGame game))
-            {
-                return false;
-            }
-
-            game.Dispose();
-            return this.games.Remove(id);
-        }
-
-        #endregion
+        game.Dispose();
+        return this.games.Remove(id);
     }
 }
