@@ -1,0 +1,56 @@
+# GitHub Actionsによるビルド設定。
+# 実行ファイルのzipを生成する。
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      # リポジトリのチェックアウト
+      - uses: actions/checkout@v6
+
+      # .NETの環境設定
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.x'
+
+      # NuGetのキャッシュ設定
+      - uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      # NuGetの取得
+      - run: dotnet restore ./MatchingApiExample.slnx
+
+      # リリースビルドの実行
+      - run: dotnet publish -c Release ./MatchingApiExample.slnx
+
+      # 実行ファイルを同一ディレクトリにまとめる
+
+      # サーバー実行ファイルzipのアップロード
+      - name: Upload Server ZIP
+        uses: actions/upload-artifact@v7
+        with:
+          name: MatchingApiExample-win64.zip
+          path: |
+            MatchingApiExample/bin/Release/net10.0/win-x64/publish/MatchingApiExample.exe
+            MatchingApiExample/bin/Release/net10.0/win-x64/publish/MatchingApiExample.staticwebassets.endpoints.json
+            MatchingApiExample/bin/Release/net10.0/win-x64/publish/appsettings.json
+            MatchingApiExample/bin/Release/net10.0/win-x64/publish/appsettings.Development.json
+          compression-level: 9
+
+      # クライアント実行ファイルzipのアップロード
+      - name: Upload Client ZIP
+        uses: actions/upload-artifact@v7
+        with:
+          name: MatchingApiExampleClient-win64.zip
+          path: |
+            MatchingApiExampleClient/bin/Release/net10.0-windows/win-x64/publish/MatchingApiExampleClient.exe
+          compression-level: 9
