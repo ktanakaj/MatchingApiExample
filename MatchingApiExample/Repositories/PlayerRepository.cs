@@ -8,10 +8,6 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Honememo.MatchingApiExample.Entities;
 using Honememo.MatchingApiExample.Exceptions;
 using Microsoft.EntityFrameworkCore;

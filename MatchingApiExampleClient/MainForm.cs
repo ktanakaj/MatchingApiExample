@@ -8,10 +8,7 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
 using System.ComponentModel;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using Honememo.MatchingApiExample.Client.Properties;
 using Honememo.MatchingApiExample.Client.Services;
 using Honememo.MatchingApiExample.Protos;

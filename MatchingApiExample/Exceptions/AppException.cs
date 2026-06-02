@@ -8,8 +8,6 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-
 namespace Honememo.MatchingApiExample.Exceptions;
 
 /// <summary>

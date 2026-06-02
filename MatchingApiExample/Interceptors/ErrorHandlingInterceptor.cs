@@ -8,13 +8,10 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
 using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
 using Honememo.MatchingApiExample.Exceptions;
-using Microsoft.Extensions.Logging;
 
 namespace Honememo.MatchingApiExample.Interceptors;
 

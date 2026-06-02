@@ -8,10 +8,7 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
 using Honememo.MatchingApiExample.Entities;
 using Honememo.MatchingApiExample.Exceptions;
 

@@ -8,10 +8,7 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Net.Client;

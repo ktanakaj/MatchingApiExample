@@ -8,7 +8,6 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Honememo.MatchingApiExample.Protos;

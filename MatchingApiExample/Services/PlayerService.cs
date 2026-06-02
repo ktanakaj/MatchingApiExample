@@ -8,10 +8,7 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-using System.Collections.Generic;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Honememo.MatchingApiExample.Exceptions;
@@ -21,7 +18,6 @@ using MapsterMapper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
 using Player = Honememo.MatchingApiExample.Entities.Player;
 
 namespace Honememo.MatchingApiExample.Services;
@@ -31,11 +27,6 @@ namespace Honememo.MatchingApiExample.Services;
 /// </summary>
 public class PlayerService : Protos.Player.PlayerBase
 {
-    /// <summary>
-    /// ロガー。
-    /// </summary>
-    private readonly ILogger<PlayerService> logger;
-
     /// <summary>
     /// Mapsterインスタンス。
     /// </summary>
@@ -49,12 +40,10 @@ public class PlayerService : Protos.Player.PlayerBase
     /// <summary>
     /// 渡されたインスタンスを使用してサービスを生成する。
     /// </summary>
-    /// <param name="logger">ロガー。</param>
     /// <param name="mapper">Mapsterインスタンス。</param>
     /// <param name="playerRepository">プレイヤーリポジトリ。</param>
-    public PlayerService(ILogger<PlayerService> logger, IMapper mapper, PlayerRepository playerRepository)
+    public PlayerService(IMapper mapper, PlayerRepository playerRepository)
     {
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         this.playerRepository = playerRepository ?? throw new ArgumentNullException(nameof(playerRepository));
     }

@@ -8,7 +8,6 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +19,7 @@ namespace Honememo.MatchingApiExample.Entities;
 [Index(nameof(Name), IsUnique = true)]
 [Index(nameof(LastLogin))]
 [Index(nameof(CreatedAt))]
-public class Player : IHasTimestamp
+public class Player : IHasCreatedAt, IHasUpdatedAt
 {
     /// <summary>
     /// プレイヤーID。
@@ -54,10 +53,10 @@ public class Player : IHasTimestamp
     /// <summary>
     /// 登録日時。
     /// </summary>
-    public DateTimeOffset? CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
     /// 更新日時。
     /// </summary>
-    public DateTimeOffset? UpdatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 }

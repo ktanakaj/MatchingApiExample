@@ -8,10 +8,6 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Honememo.MatchingApiExample.Entities;
@@ -20,7 +16,6 @@ using Honememo.MatchingApiExample.Protos;
 using Honememo.MatchingApiExample.Repositories;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
 using Player = Honememo.MatchingApiExample.Entities.Player;
 
 namespace Honememo.MatchingApiExample.Services;

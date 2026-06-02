@@ -8,11 +8,7 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-using System.IO;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using Honememo.MatchingApiExample.Entities;
 using Honememo.MatchingApiExample.Interceptors;
 using Honememo.MatchingApiExample.Repositories;
@@ -21,15 +17,8 @@ using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 
 // Serilogロガーを設定
@@ -39,9 +28,6 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 try
 {
-    // 日本語文字コード用のライブラリを読み込み
-    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
     // Webアプリを初期化する
     var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +45,7 @@ try
         options.EnableSensitiveDataLogging();
         options.UseLoggerFactory(provider.GetService<ILoggerFactory>());
         ApplyDbConfig(options, builder.Configuration.GetSection("Database"));
+        options.AddInterceptors(new TimeStampInterceptor());
     });
 
     // gRPC設定
@@ -83,7 +70,6 @@ try
             .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Repository")))
                 .AsSelfWithInterfaces()
                 .WithScopedLifetime());
-    builder.Services.AddScoped<IUnitOfWork>(x => x.GetRequiredService<AppDbContext>());
     builder.Services.AddSingleton<RoomRepository>();
     builder.Services.AddSingleton<GameRepository>();
 

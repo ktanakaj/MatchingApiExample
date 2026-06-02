@@ -8,8 +8,6 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System.Windows.Forms;
-
 // ※ プロパティを含むので、そのまま他のプロジェクトに流用することはできない
 using Honememo.MatchingApiExample.Client.Properties;
 

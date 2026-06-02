@@ -1,29 +1,23 @@
 ﻿// ================================================================================================
 // <summary>
-//      タイムスタンプを持つエンティティのインタフェースソース</summary>
+//      更新日時を持つエンティティのインタフェースソース</summary>
 //
-// <copyright file="IHasTimestamp.cs">
+// <copyright file="IHasUpdatedAt.cs">
 //      Copyright (C) 2026 Koichi Tanaka. All rights reserved.</copyright>
 // <author>
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-
 namespace Honememo.MatchingApiExample.Entities;
 
 /// <summary>
-/// タイムスタンプを持つエンティティのインタフェース。
+/// 更新日時を持つエンティティのインタフェース。
 /// </summary>
-public interface IHasTimestamp
+/// <remarks>このインタフェースを実装している場合、各DBコンテキストで自動的に更新日時が更新されます。</remarks>
+public interface IHasUpdatedAt
 {
-    /// <summary>
-    /// 作成日時。
-    /// </summary>
-    DateTimeOffset? CreatedAt { get; set; }
-
     /// <summary>
     /// 更新日時。
     /// </summary>
-    DateTimeOffset? UpdatedAt { get; set; }
+    DateTimeOffset UpdatedAt { get; set; }
 }

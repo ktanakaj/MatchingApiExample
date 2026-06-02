@@ -8,9 +8,6 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-using System.Threading;
-using System.Windows.Forms;
 using Honememo.MatchingApiExample.Client.Utilities;
 
 namespace Honememo.MatchingApiExample.Client;
