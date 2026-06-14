@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option csharp_namespace = "Honememo.MatchingApiExample.Protos";
+
+package honememo.matching_api_example;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+// 早押しゲームサービス。
+service ReactionGame {
+  // ゲームを準備完了にする。
+  rpc Ready (google.protobuf.Empty) returns (stream GameEventReply);
+  // ボタンを押す。
+  rpc Submit (SubmitRequest) returns (google.protobuf.Empty);
+}
+
+// ゲームイベント種別列挙体。
+enum ReactionGameEventType {
+  READY = 0;
+  START = 1;
+  SUBMITABLE = 2;
+  SUBMITEED = 3;
+  END = 4;
+  ABORT = 5;
+}
+
+// 回答結果列挙体。
+enum ReactionGameResult {
+  OK = 0;
+  NG = 1;
+  GAMEOVER = 2;
+}
+
+// ボタンを押すの引数。
+message SubmitRequest {
+  // ボタン押下日時
+  google.protobuf.Timestamp date = 1;
+}
+
+// ゲームイベントの戻り値。
+message GameEventReply {
+  // 戻り値の種類。
+  ReactionGameEventType type = 1;
+  // プレイヤーID。
+  int32 playerId = 2;
+  // 回答の結果。
+  ReactionGameResult result = 4;
+}

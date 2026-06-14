@@ -1,33 +1,28 @@
 ﻿// ================================================================================================
 // <summary>
-//      しりとりゲームクラスソース</summary>
+//      早押しゲームクラスソース</summary>
 //
-// <copyright file="Shiritori.cs">
+// <copyright file="ReactionGame.cs">
 //      Copyright (C) 2026 Koichi Tanaka. All rights reserved.</copyright>
 // <author>
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Honememo.MatchingApiExample.Exceptions;
-using Honememo.MatchingApiExample.Protos;
 using Microsoft.VisualBasic;
 
 namespace Honememo.MatchingApiExample.Entities;
 
 /// <summary>
-/// しりとりゲームのデータ等を扱うクラス。
+/// 早押しゲームのデータ等を扱うクラス。
 /// </summary>
 /// <remarks>
-/// しりとりゲームクラスはゲームのルールなどをモデル化したもの。
+/// 早押しゲームクラスはゲームのルールなどをモデル化したもの。
 /// メモリ上で管理される。エンティティにあるがDBとは紐づかない。
 /// </remarks>
-public class Shiritori : IGame
+public class ReactionGame : IGame
 {
     /// <summary>
     /// 回答持ち時間（秒）。
@@ -91,7 +86,7 @@ public class Shiritori : IGame
     /// </summary>
     /// <param name="playerIds">ゲームを行うプレイヤーのID配列。</param>
     /// <exception cref="InvalidArgumentException">プレイヤーが二人未満の場合。</exception>
-    public Shiritori(ICollection<int> playerIds)
+    public ReactionGame(ICollection<int> playerIds)
     {
         if (playerIds.Count <= 1)
         {

@@ -33,7 +33,7 @@ public class MapperConfiguration : IRegister
         config.NewConfig<Room, RoomSummary>()
             .Map(dest => dest.Players, src => src.PlayerIds.Count);
         config.NewConfig<Room, GetRoomReply>();
-        config.NewConfig<Shiritori.GameEventArgs, GameEventReply>()
+        config.NewConfig<ReactionGame.GameEventArgs, GameEventReply>()
             .Map(dest => dest.Limit, src => src.Limit != null ? Timestamp.FromDateTimeOffset(src.Limit.Value) : null)
             .IgnoreNullValues(true);
     }

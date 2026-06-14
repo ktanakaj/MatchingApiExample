@@ -246,13 +246,13 @@ public partial class MainForm : Form
     }
 
     /// <summary>
-    /// しりとりゲーム開始ボタンクリック時のイベント処理。
+    /// 早押しゲーム起動ボタンクリック時のイベント処理。
     /// </summary>
     /// <param name="sender">イベント発生元インスタンス。</param>
     /// <param name="e">イベントパラメータ。</param>
-    private void ButtonShiritori_Click(object sender, EventArgs e)
+    private void ButtonReactionGame_Click(object sender, EventArgs e)
     {
-        using (var form = new ShiritoriForm(this.service.Channel))
+        using (var form = new ReactionGameForm(this.service.Channel))
         {
             form.ShowDialog();
         }
@@ -363,7 +363,7 @@ public partial class MainForm : Form
             this.listViewMemberList.Items.Add(new ListViewItem(player.Name));
         }
 
-        this.buttonShiritori.Enabled = e.Players.Count >= e.MaxPlayers;
+        this.buttonReactionGame.Enabled = e.Players.Count >= e.MaxPlayers;
     }
 
     /// <summary>

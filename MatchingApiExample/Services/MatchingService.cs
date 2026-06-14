@@ -341,7 +341,7 @@ public class MatchingService : Matching.MatchingBase
     private async Task<GetRoomReply> MakeRoomStatus(Room room)
     {
         var reply = this.mapper.Map<GetRoomReply>(room);
-        reply.Players.Add(this.mapper.Map<ICollection<PlayerInfo>>(await this.playerRepository.Find(room.PlayerIds)));
+        reply.Players.Add(this.mapper.Map<ICollection<PlayerEntry>>(await this.playerRepository.Find(room.PlayerIds)));
         return reply;
     }
 

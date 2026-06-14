@@ -78,5 +78,5 @@ message GetRoomReply {
   // 最大人数。
   uint32 max_players = 2;
   // 参加プレイヤーのリスト。
-  repeated PlayerInfo players = 3;
+  repeated PlayerEntry players = 3;
 }

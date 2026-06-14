@@ -54,14 +54,14 @@ public class PlayerService : Protos.Player.PlayerBase
     /// <param name="request">端末情報。</param>
     /// <param name="context">実行コンテキスト。</param>
     /// <returns>登録したプレイヤー情報。</returns>
-    public override async Task<PlayerInfo> SignUp(SignUpRequest request, ServerCallContext context)
+    public override async Task<PlayerEntry> SignUp(SignUpRequest request, ServerCallContext context)
     {
         var player = this.mapper.Map<Player>(request);
         player.Name = "(empty)";
         player.LastLogin = DateTimeOffset.UtcNow;
         player = await this.playerRepository.Create(player);
         await this.SignInAsync(player, context);
-        return this.mapper.Map<PlayerInfo>(player);
+        return this.mapper.Map<PlayerEntry>(player);
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public class PlayerService : Protos.Player.PlayerBase
     /// <param name="request">認証情報。</param>
     /// <param name="context">実行コンテキスト。</param>
     /// <returns>認証したプレイヤー情報。</returns>
-    public override async Task<PlayerInfo> SignIn(SignInRequest request, ServerCallContext context)
+    public override async Task<PlayerEntry> SignIn(SignInRequest request, ServerCallContext context)
     {
         var player = await this.playerRepository.Find(request.Id);
         if (player == null || player.Token != request.Token)
@@ -81,7 +81,7 @@ public class PlayerService : Protos.Player.PlayerBase
         player.LastLogin = DateTimeOffset.UtcNow;
         player = await this.playerRepository.Update(player);
         await this.SignInAsync(player, context);
-        return this.mapper.Map<PlayerInfo>(player);
+        return this.mapper.Map<PlayerEntry>(player);
     }
 
     /// <summary>
@@ -91,9 +91,9 @@ public class PlayerService : Protos.Player.PlayerBase
     /// <param name="context">実行コンテキスト。</param>
     /// <returns>取得したプレイヤー情報。</returns>
     [Authorize]
-    public override async Task<PlayerInfo> FindMe(Empty request, ServerCallContext context)
+    public override async Task<PlayerEntry> FindMe(Empty request, ServerCallContext context)
     {
-        return this.mapper.Map<PlayerInfo>(await this.playerRepository.FindOrFail(context.GetPlayerId()));
+        return this.mapper.Map<PlayerEntry>(await this.playerRepository.FindOrFail(context.GetPlayerId()));
     }
 
     /// <summary>
@@ -103,11 +103,11 @@ public class PlayerService : Protos.Player.PlayerBase
     /// <param name="context">実行コンテキスト。</param>
     /// <returns>更新したプレイヤー情報。</returns>
     [Authorize]
-    public override async Task<PlayerInfo> ChangeMe(ChangeMeRequest request, ServerCallContext context)
+    public override async Task<PlayerEntry> ChangeMe(ChangeMeRequest request, ServerCallContext context)
     {
         var player = await this.playerRepository.FindOrFail(context.GetPlayerId());
         this.mapper.Map(request, player);
-        return this.mapper.Map<PlayerInfo>(await this.playerRepository.Update(player));
+        return this.mapper.Map<PlayerEntry>(await this.playerRepository.Update(player));
     }
 
     /// <summary>
