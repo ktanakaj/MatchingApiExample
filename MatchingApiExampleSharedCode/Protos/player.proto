@@ -9,17 +9,17 @@ import "google/protobuf/empty.proto";
 // プレイヤー関連サービス。
 service Player {
   // プレイヤーを登録する。
-  rpc SignUp (SignUpRequest) returns (PlayerInfo);
+  rpc SignUp (SignUpRequest) returns (PlayerEntry);
   // プレイヤーを認証する。
-  rpc SignIn (SignInRequest) returns (PlayerInfo);
+  rpc SignIn (SignInRequest) returns (PlayerEntry);
   // 認証中のプレイヤー情報を取得する。
-  rpc FindMe (google.protobuf.Empty) returns (PlayerInfo);
+  rpc FindMe (google.protobuf.Empty) returns (PlayerEntry);
   // 認証中のプレイヤーの情報を変更する。
-  rpc ChangeMe (ChangeMeRequest) returns (PlayerInfo);
+  rpc ChangeMe (ChangeMeRequest) returns (PlayerEntry);
 }
 
 // プレイヤー情報。
-message PlayerInfo {
+message PlayerEntry {
   // プレイヤーID。
   int32 id = 1;
   // プレイヤー名。

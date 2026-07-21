@@ -1,16 +1,13 @@
 ﻿// ================================================================================================
 // <summary>
-//      しりとりゲーム画面サービスクラスソース</summary>
+//      早押しゲーム画面サービスクラスソース</summary>
 //
-// <copyright file="ShiritoriFormService.cs">
+// <copyright file="ReactionGameFormService.cs">
 //      Copyright (C) 2026 Koichi Tanaka. All rights reserved.</copyright>
 // <author>
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Net.Client;
@@ -19,10 +16,10 @@ using Honememo.MatchingApiExample.Protos;
 namespace Honememo.MatchingApiExample.Client.Services;
 
 /// <summary>
-/// しりとりゲーム画面のサービスを受け持つクラスです。
+/// 早押しゲーム画面のサービスを受け持つクラスです。
 /// </summary>
-/// <remarks>ShiritoriForm肥大化に伴いGUIの古典的MVCに置けるMを切り出したクラス。</remarks>
-public class ShiritoriFormService : IDisposable
+/// <remarks>ReactionGameForm肥大化に伴いGUIの古典的MVCに置けるMを切り出したクラス。</remarks>
+public class ReactionGameFormService : IDisposable
 {
     /// <summary>
     /// gRPCチャネル。
@@ -30,9 +27,9 @@ public class ShiritoriFormService : IDisposable
     private GrpcChannel channel;
 
     /// <summary>
-    /// しりとりゲームサービスのクライアント。
+    /// 早押しゲームサービスのクライアント。
     /// </summary>
-    private Shiritori.ShiritoriClient shiritoriService;
+    private ReactionGame.ReactionGameClient reactionGameService;
 
     /// <summary>
     /// マッチングサービスのクライアント。
@@ -48,10 +45,10 @@ public class ShiritoriFormService : IDisposable
     /// 接続済みのgRPCチャネルを使用するサービスを生成する。
     /// </summary>
     /// <param name="channel">gRPCチャネル。</param>
-    public ShiritoriFormService(GrpcChannel channel)
+    public ReactionGameFormService(GrpcChannel channel)
     {
         this.channel = channel;
-        this.shiritoriService = new Shiritori.ShiritoriClient(this.channel);
+        this.reactionGameService = new ReactionGame.ReactionGameClient(this.channel);
         this.matchingService = new Matching.MatchingClient(this.channel);
     }
 
@@ -76,7 +73,7 @@ public class ShiritoriFormService : IDisposable
     public async Task Ready()
     {
         this.UnsubscribeGameEventSource();
-        using var call = this.shiritoriService.Ready(new Empty());
+        using var call = this.reactionGameService.Ready(new Empty());
         try
         {
             this.readySource = new CancellationTokenSource();
@@ -95,22 +92,14 @@ public class ShiritoriFormService : IDisposable
     }
 
     /// <summary>
-    /// 自分の手番に単語を回答する。
+    /// ボタンを押す。
     /// </summary>
-    /// <param name="word">単語。</param>
+    /// <param name="pressTime">押下日時。</param>
     /// <returns>処理状態。</returns>
-    public async Task<AnswerReply> Answer(string word)
+    public async Task Submit(DateTimeOffset pressTime)
     {
-        return await this.shiritoriService.AnswerAsync(new AnswerRequest { Word = word });
-    }
-
-    /// <summary>
-    /// 直前の他人の回答に異議を送信する。
-    /// </summary>
-    /// <returns>処理状態。</returns>
-    public async Task Claim()
-    {
-        await this.shiritoriService.ClaimAsync(new Empty());
+        var ts = Timestamp.FromDateTimeOffset(pressTime);
+        await this.reactionGameService.SubmitAsync(new SubmitRequest { Date = ts });
     }
 
     /// <summary>

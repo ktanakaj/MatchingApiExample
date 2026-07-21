@@ -89,7 +89,7 @@ try
     // gRPCエンドポイント設定
     app.MapGrpcService<PlayerService>();
     app.MapGrpcService<MatchingService>();
-    app.MapGrpcService<ShiritoriService>();
+    app.MapGrpcService<ReactionGameService>();
 
     app.MapGet("/", async context =>
     {

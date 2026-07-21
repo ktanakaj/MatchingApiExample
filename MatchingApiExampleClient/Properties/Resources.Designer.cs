@@ -19,7 +19,7 @@ namespace Honememo.MatchingApiExample.Client.Properties {
     // または Visual Studio のようなツールを使用して自動生成されました。
     // メンバーを追加または削除するには、.ResX ファイルを編集して、/str オプションと共に
     // ResGen を実行し直すか、または VS プロジェクトをビルドし直します。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -66,6 +66,69 @@ namespace Honememo.MatchingApiExample.Client.Properties {
         internal static string ErrorTitle {
             get {
                 return ResourceManager.GetString("ErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   よーい… に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGameCue {
+            get {
+                return ResourceManager.GetString("ReactionGameCue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   ゲーム終了 に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGameEnded {
+            get {
+                return ResourceManager.GetString("ReactionGameEnded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   プレイヤー{0} の勝ち！ に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGamePlayerWon {
+            get {
+                return ResourceManager.GetString("ReactionGamePlayerWon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   スタート！ 押してください！ に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGamePressNow {
+            get {
+                return ResourceManager.GetString("ReactionGamePressNow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   準備完了！もうすぐゲームが始まります。 に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGameStarting {
+            get {
+                return ResourceManager.GetString("ReactionGameStarting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   他のプレイヤーの入室を待っています… に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGameWaiting {
+            get {
+                return ResourceManager.GetString("ReactionGameWaiting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   あなたの勝ちです！ に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGameYouWin {
+            get {
+                return ResourceManager.GetString("ReactionGameYouWin", resourceCulture);
             }
         }
         

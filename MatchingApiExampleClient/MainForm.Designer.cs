@@ -41,389 +41,374 @@ partial class MainForm
     /// </summary>
     private void InitializeComponent()
     {
-        this.components = new System.ComponentModel.Container();
-        this.groupBoxConfig = new System.Windows.Forms.GroupBox();
-        this.buttonConnect = new System.Windows.Forms.Button();
-        this.textBoxUrl = new System.Windows.Forms.TextBox();
-        this.labelUrl = new System.Windows.Forms.Label();
-        this.groupBoxPlayer = new System.Windows.Forms.GroupBox();
-        this.buttonChangeMe = new System.Windows.Forms.Button();
-        this.textBoxRating = new System.Windows.Forms.TextBox();
-        this.labelPlayerRating = new System.Windows.Forms.Label();
-        this.textBoxPlayerName = new System.Windows.Forms.TextBox();
-        this.labelPlayerName = new System.Windows.Forms.Label();
-        this.groupBoxCreateRoom = new System.Windows.Forms.GroupBox();
-        this.buttonCreateRoom = new System.Windows.Forms.Button();
-        this.textBoxRoomSize = new System.Windows.Forms.TextBox();
-        this.labelRoomSize = new System.Windows.Forms.Label();
-        this.groupBoxMatch = new System.Windows.Forms.GroupBox();
-        this.buttonMatch = new System.Windows.Forms.Button();
-        this.groupBoxList = new System.Windows.Forms.GroupBox();
-        this.listViewRoomList = new System.Windows.Forms.ListView();
-        this.columnHeaderRoomListNo = new System.Windows.Forms.ColumnHeader();
-        this.columnHeaderRoomListPlayers = new System.Windows.Forms.ColumnHeader();
-        this.columnHeaderRoomListRating = new System.Windows.Forms.ColumnHeader();
-        this.groupBoxGame = new System.Windows.Forms.GroupBox();
-        this.buttonShiritori = new System.Windows.Forms.Button();
-        this.listViewMemberList = new System.Windows.Forms.ListView();
-        this.labelMemberList = new System.Windows.Forms.Label();
-        this.buttonLeaveRoom = new System.Windows.Forms.Button();
-        this.textBoxRoomNo = new System.Windows.Forms.TextBox();
-        this.labelRoomNo = new System.Windows.Forms.Label();
-        this.errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
-        this.groupBoxConfig.SuspendLayout();
-        this.groupBoxPlayer.SuspendLayout();
-        this.groupBoxCreateRoom.SuspendLayout();
-        this.groupBoxMatch.SuspendLayout();
-        this.groupBoxList.SuspendLayout();
-        this.groupBoxGame.SuspendLayout();
-        ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).BeginInit();
-        this.SuspendLayout();
+        components = new System.ComponentModel.Container();
+        groupBoxConfig = new GroupBox();
+        buttonConnect = new Button();
+        textBoxUrl = new TextBox();
+        labelUrl = new Label();
+        groupBoxPlayer = new GroupBox();
+        buttonChangeMe = new Button();
+        textBoxRating = new TextBox();
+        labelPlayerRating = new Label();
+        textBoxPlayerName = new TextBox();
+        labelPlayerName = new Label();
+        groupBoxCreateRoom = new GroupBox();
+        buttonCreateRoom = new Button();
+        textBoxRoomSize = new TextBox();
+        labelRoomSize = new Label();
+        groupBoxMatch = new GroupBox();
+        buttonMatch = new Button();
+        groupBoxList = new GroupBox();
+        listViewRoomList = new ListView();
+        columnHeaderRoomListNo = new ColumnHeader();
+        columnHeaderRoomListPlayers = new ColumnHeader();
+        columnHeaderRoomListRating = new ColumnHeader();
+        groupBoxGame = new GroupBox();
+        buttonReactionGame = new Button();
+        listViewMemberList = new ListView();
+        labelMemberList = new Label();
+        buttonLeaveRoom = new Button();
+        textBoxRoomNo = new TextBox();
+        labelRoomNo = new Label();
+        errorProvider = new ErrorProvider(components);
+        groupBoxConfig.SuspendLayout();
+        groupBoxPlayer.SuspendLayout();
+        groupBoxCreateRoom.SuspendLayout();
+        groupBoxMatch.SuspendLayout();
+        groupBoxList.SuspendLayout();
+        groupBoxGame.SuspendLayout();
+        ((System.ComponentModel.ISupportInitialize)errorProvider).BeginInit();
+        SuspendLayout();
         // 
         // groupBoxConfig
         // 
-        this.groupBoxConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-        | System.Windows.Forms.AnchorStyles.Right)));
-        this.groupBoxConfig.Controls.Add(this.buttonConnect);
-        this.groupBoxConfig.Controls.Add(this.textBoxUrl);
-        this.groupBoxConfig.Controls.Add(this.labelUrl);
-        this.groupBoxConfig.Location = new System.Drawing.Point(13, 12);
-        this.groupBoxConfig.Name = "groupBoxConfig";
-        this.groupBoxConfig.Size = new System.Drawing.Size(559, 61);
-        this.groupBoxConfig.TabIndex = 0;
-        this.groupBoxConfig.TabStop = false;
-        this.groupBoxConfig.Text = "環境設定";
+        groupBoxConfig.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        groupBoxConfig.Controls.Add(buttonConnect);
+        groupBoxConfig.Controls.Add(textBoxUrl);
+        groupBoxConfig.Controls.Add(labelUrl);
+        groupBoxConfig.Location = new Point(13, 12);
+        groupBoxConfig.Name = "groupBoxConfig";
+        groupBoxConfig.Size = new Size(559, 61);
+        groupBoxConfig.TabIndex = 0;
+        groupBoxConfig.TabStop = false;
+        groupBoxConfig.Text = "環境設定";
         // 
         // buttonConnect
         // 
-        this.buttonConnect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.buttonConnect.AutoSize = true;
-        this.buttonConnect.Location = new System.Drawing.Point(508, 20);
-        this.buttonConnect.Name = "buttonConnect";
-        this.buttonConnect.Size = new System.Drawing.Size(41, 25);
-        this.buttonConnect.TabIndex = 2;
-        this.buttonConnect.Text = "接続";
-        this.buttonConnect.UseVisualStyleBackColor = true;
-        this.buttonConnect.Click += new System.EventHandler(this.ButtonConnect_Click);
+        buttonConnect.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        buttonConnect.AutoSize = true;
+        buttonConnect.Location = new Point(508, 20);
+        buttonConnect.Name = "buttonConnect";
+        buttonConnect.Size = new Size(41, 25);
+        buttonConnect.TabIndex = 2;
+        buttonConnect.Text = "接続";
+        buttonConnect.UseVisualStyleBackColor = true;
+        buttonConnect.Click += ButtonConnect_Click;
         // 
         // textBoxUrl
         // 
-        this.textBoxUrl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-        | System.Windows.Forms.AnchorStyles.Right)));
-        this.textBoxUrl.Location = new System.Drawing.Point(79, 22);
-        this.textBoxUrl.MaxLength = 4096;
-        this.textBoxUrl.Name = "textBoxUrl";
-        this.textBoxUrl.Size = new System.Drawing.Size(411, 23);
-        this.textBoxUrl.TabIndex = 1;
-        this.textBoxUrl.Validating += new System.ComponentModel.CancelEventHandler(this.TextBoxUrl_Validating);
-        this.textBoxUrl.Validated += new System.EventHandler(this.ResetErrorProvider_Validated);
+        textBoxUrl.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        textBoxUrl.Location = new Point(79, 22);
+        textBoxUrl.MaxLength = 4096;
+        textBoxUrl.Name = "textBoxUrl";
+        textBoxUrl.Size = new Size(411, 23);
+        textBoxUrl.TabIndex = 1;
+        textBoxUrl.Validating += TextBoxUrl_Validating;
+        textBoxUrl.Validated += ResetErrorProvider_Validated;
         // 
         // labelUrl
         // 
-        this.labelUrl.AutoSize = true;
-        this.labelUrl.Location = new System.Drawing.Point(6, 25);
-        this.labelUrl.Name = "labelUrl";
-        this.labelUrl.Size = new System.Drawing.Size(67, 15);
-        this.labelUrl.TabIndex = 0;
-        this.labelUrl.Text = "接続先URL:";
+        labelUrl.AutoSize = true;
+        labelUrl.Location = new Point(6, 25);
+        labelUrl.Name = "labelUrl";
+        labelUrl.Size = new Size(67, 15);
+        labelUrl.TabIndex = 0;
+        labelUrl.Text = "接続先URL:";
         // 
         // groupBoxPlayer
         // 
-        this.groupBoxPlayer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-        | System.Windows.Forms.AnchorStyles.Right)));
-        this.groupBoxPlayer.Controls.Add(this.buttonChangeMe);
-        this.groupBoxPlayer.Controls.Add(this.textBoxRating);
-        this.groupBoxPlayer.Controls.Add(this.labelPlayerRating);
-        this.groupBoxPlayer.Controls.Add(this.textBoxPlayerName);
-        this.groupBoxPlayer.Controls.Add(this.labelPlayerName);
-        this.groupBoxPlayer.Location = new System.Drawing.Point(13, 82);
-        this.groupBoxPlayer.Name = "groupBoxPlayer";
-        this.groupBoxPlayer.Size = new System.Drawing.Size(559, 61);
-        this.groupBoxPlayer.TabIndex = 1;
-        this.groupBoxPlayer.TabStop = false;
-        this.groupBoxPlayer.Text = "プレイヤー情報";
+        groupBoxPlayer.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        groupBoxPlayer.Controls.Add(buttonChangeMe);
+        groupBoxPlayer.Controls.Add(textBoxRating);
+        groupBoxPlayer.Controls.Add(labelPlayerRating);
+        groupBoxPlayer.Controls.Add(textBoxPlayerName);
+        groupBoxPlayer.Controls.Add(labelPlayerName);
+        groupBoxPlayer.Location = new Point(13, 82);
+        groupBoxPlayer.Name = "groupBoxPlayer";
+        groupBoxPlayer.Size = new Size(559, 61);
+        groupBoxPlayer.TabIndex = 1;
+        groupBoxPlayer.TabStop = false;
+        groupBoxPlayer.Text = "プレイヤー情報";
         // 
         // buttonChangeMe
         // 
-        this.buttonChangeMe.AutoSize = true;
-        this.buttonChangeMe.Enabled = false;
-        this.buttonChangeMe.Location = new System.Drawing.Point(461, 20);
-        this.buttonChangeMe.Name = "buttonChangeMe";
-        this.buttonChangeMe.Size = new System.Drawing.Size(41, 25);
-        this.buttonChangeMe.TabIndex = 4;
-        this.buttonChangeMe.Text = "変更";
-        this.buttonChangeMe.UseVisualStyleBackColor = true;
-        this.buttonChangeMe.Click += new System.EventHandler(this.ButtonChangeMe_Click);
+        buttonChangeMe.AutoSize = true;
+        buttonChangeMe.Enabled = false;
+        buttonChangeMe.Location = new Point(461, 20);
+        buttonChangeMe.Name = "buttonChangeMe";
+        buttonChangeMe.Size = new Size(41, 25);
+        buttonChangeMe.TabIndex = 4;
+        buttonChangeMe.Text = "変更";
+        buttonChangeMe.UseVisualStyleBackColor = true;
+        buttonChangeMe.Click += ButtonChangeMe_Click;
         // 
         // textBoxRating
         // 
-        this.textBoxRating.Location = new System.Drawing.Point(376, 22);
-        this.textBoxRating.MaxLength = 5;
-        this.textBoxRating.Name = "textBoxRating";
-        this.textBoxRating.Size = new System.Drawing.Size(49, 23);
-        this.textBoxRating.TabIndex = 3;
-        this.textBoxRating.Validating += new System.ComponentModel.CancelEventHandler(this.TextBoxRating_Validating);
-        this.textBoxRating.Validated += new System.EventHandler(this.ResetErrorProvider_Validated);
+        textBoxRating.Location = new Point(376, 22);
+        textBoxRating.MaxLength = 5;
+        textBoxRating.Name = "textBoxRating";
+        textBoxRating.Size = new Size(49, 23);
+        textBoxRating.TabIndex = 3;
+        textBoxRating.Validating += TextBoxRating_Validating;
+        textBoxRating.Validated += ResetErrorProvider_Validated;
         // 
         // labelPlayerRating
         // 
-        this.labelPlayerRating.AutoSize = true;
-        this.labelPlayerRating.Location = new System.Drawing.Point(309, 25);
-        this.labelPlayerRating.Name = "labelPlayerRating";
-        this.labelPlayerRating.Size = new System.Drawing.Size(61, 15);
-        this.labelPlayerRating.TabIndex = 2;
-        this.labelPlayerRating.Text = "レーティング:";
+        labelPlayerRating.AutoSize = true;
+        labelPlayerRating.Location = new Point(309, 25);
+        labelPlayerRating.Name = "labelPlayerRating";
+        labelPlayerRating.Size = new Size(61, 15);
+        labelPlayerRating.TabIndex = 2;
+        labelPlayerRating.Text = "レーティング:";
         // 
         // textBoxPlayerName
         // 
-        this.textBoxPlayerName.Location = new System.Drawing.Point(79, 22);
-        this.textBoxPlayerName.MaxLength = 32;
-        this.textBoxPlayerName.Name = "textBoxPlayerName";
-        this.textBoxPlayerName.Size = new System.Drawing.Size(205, 23);
-        this.textBoxPlayerName.TabIndex = 1;
-        this.textBoxPlayerName.Validating += new System.ComponentModel.CancelEventHandler(this.RequireTextBox_Validating);
-        this.textBoxPlayerName.Validated += new System.EventHandler(this.ResetErrorProvider_Validated);
+        textBoxPlayerName.Location = new Point(79, 22);
+        textBoxPlayerName.MaxLength = 32;
+        textBoxPlayerName.Name = "textBoxPlayerName";
+        textBoxPlayerName.Size = new Size(205, 23);
+        textBoxPlayerName.TabIndex = 1;
+        textBoxPlayerName.Validating += RequireTextBox_Validating;
+        textBoxPlayerName.Validated += ResetErrorProvider_Validated;
         // 
         // labelPlayerName
         // 
-        this.labelPlayerName.AutoSize = true;
-        this.labelPlayerName.Location = new System.Drawing.Point(6, 25);
-        this.labelPlayerName.Name = "labelPlayerName";
-        this.labelPlayerName.Size = new System.Drawing.Size(67, 15);
-        this.labelPlayerName.TabIndex = 0;
-        this.labelPlayerName.Text = "プレイヤー名:";
+        labelPlayerName.AutoSize = true;
+        labelPlayerName.Location = new Point(6, 25);
+        labelPlayerName.Name = "labelPlayerName";
+        labelPlayerName.Size = new Size(67, 15);
+        labelPlayerName.TabIndex = 0;
+        labelPlayerName.Text = "プレイヤー名:";
         // 
         // groupBoxCreateRoom
         // 
-        this.groupBoxCreateRoom.Controls.Add(this.buttonCreateRoom);
-        this.groupBoxCreateRoom.Controls.Add(this.textBoxRoomSize);
-        this.groupBoxCreateRoom.Controls.Add(this.labelRoomSize);
-        this.groupBoxCreateRoom.Enabled = false;
-        this.groupBoxCreateRoom.Location = new System.Drawing.Point(13, 155);
-        this.groupBoxCreateRoom.Name = "groupBoxCreateRoom";
-        this.groupBoxCreateRoom.Size = new System.Drawing.Size(180, 61);
-        this.groupBoxCreateRoom.TabIndex = 2;
-        this.groupBoxCreateRoom.TabStop = false;
-        this.groupBoxCreateRoom.Text = "部屋を作る";
+        groupBoxCreateRoom.Controls.Add(buttonCreateRoom);
+        groupBoxCreateRoom.Controls.Add(textBoxRoomSize);
+        groupBoxCreateRoom.Controls.Add(labelRoomSize);
+        groupBoxCreateRoom.Enabled = false;
+        groupBoxCreateRoom.Location = new Point(13, 155);
+        groupBoxCreateRoom.Name = "groupBoxCreateRoom";
+        groupBoxCreateRoom.Size = new Size(180, 61);
+        groupBoxCreateRoom.TabIndex = 2;
+        groupBoxCreateRoom.TabStop = false;
+        groupBoxCreateRoom.Text = "部屋を作る";
         // 
         // buttonCreateRoom
         // 
-        this.buttonCreateRoom.AutoSize = true;
-        this.buttonCreateRoom.Location = new System.Drawing.Point(104, 20);
-        this.buttonCreateRoom.Name = "buttonCreateRoom";
-        this.buttonCreateRoom.Size = new System.Drawing.Size(41, 25);
-        this.buttonCreateRoom.TabIndex = 2;
-        this.buttonCreateRoom.Text = "作成";
-        this.buttonCreateRoom.UseVisualStyleBackColor = true;
-        this.buttonCreateRoom.Click += new System.EventHandler(this.ButtonCreateRoom_Click);
+        buttonCreateRoom.AutoSize = true;
+        buttonCreateRoom.Location = new Point(104, 20);
+        buttonCreateRoom.Name = "buttonCreateRoom";
+        buttonCreateRoom.Size = new Size(41, 25);
+        buttonCreateRoom.TabIndex = 2;
+        buttonCreateRoom.Text = "作成";
+        buttonCreateRoom.UseVisualStyleBackColor = true;
+        buttonCreateRoom.Click += ButtonCreateRoom_Click;
         // 
         // textBoxRoomSize
         // 
-        this.textBoxRoomSize.Location = new System.Drawing.Point(46, 22);
-        this.textBoxRoomSize.MaxLength = 2;
-        this.textBoxRoomSize.Name = "textBoxRoomSize";
-        this.textBoxRoomSize.Size = new System.Drawing.Size(40, 23);
-        this.textBoxRoomSize.TabIndex = 1;
-        this.textBoxRoomSize.Text = "2";
-        this.textBoxRoomSize.Validating += new System.ComponentModel.CancelEventHandler(this.TextBoxRoomSize_Validating);
-        this.textBoxRoomSize.Validated += new System.EventHandler(this.ResetErrorProvider_Validated);
+        textBoxRoomSize.Location = new Point(46, 22);
+        textBoxRoomSize.MaxLength = 2;
+        textBoxRoomSize.Name = "textBoxRoomSize";
+        textBoxRoomSize.Size = new Size(40, 23);
+        textBoxRoomSize.TabIndex = 1;
+        textBoxRoomSize.Text = "2";
+        textBoxRoomSize.Validating += TextBoxRoomSize_Validating;
+        textBoxRoomSize.Validated += ResetErrorProvider_Validated;
         // 
         // labelRoomSize
         // 
-        this.labelRoomSize.AutoSize = true;
-        this.labelRoomSize.Location = new System.Drawing.Point(6, 25);
-        this.labelRoomSize.Name = "labelRoomSize";
-        this.labelRoomSize.Size = new System.Drawing.Size(34, 15);
-        this.labelRoomSize.TabIndex = 0;
-        this.labelRoomSize.Text = "人数:";
+        labelRoomSize.AutoSize = true;
+        labelRoomSize.Location = new Point(6, 25);
+        labelRoomSize.Name = "labelRoomSize";
+        labelRoomSize.Size = new Size(34, 15);
+        labelRoomSize.TabIndex = 0;
+        labelRoomSize.Text = "人数:";
         // 
         // groupBoxMatch
         // 
-        this.groupBoxMatch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-        | System.Windows.Forms.AnchorStyles.Right)));
-        this.groupBoxMatch.Controls.Add(this.buttonMatch);
-        this.groupBoxMatch.Enabled = false;
-        this.groupBoxMatch.Location = new System.Drawing.Point(217, 155);
-        this.groupBoxMatch.Name = "groupBoxMatch";
-        this.groupBoxMatch.Size = new System.Drawing.Size(149, 61);
-        this.groupBoxMatch.TabIndex = 3;
-        this.groupBoxMatch.TabStop = false;
-        this.groupBoxMatch.Text = "部屋を探す";
+        groupBoxMatch.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        groupBoxMatch.Controls.Add(buttonMatch);
+        groupBoxMatch.Enabled = false;
+        groupBoxMatch.Location = new Point(217, 155);
+        groupBoxMatch.Name = "groupBoxMatch";
+        groupBoxMatch.Size = new Size(149, 61);
+        groupBoxMatch.TabIndex = 3;
+        groupBoxMatch.TabStop = false;
+        groupBoxMatch.Text = "部屋を探す";
         // 
         // buttonMatch
         // 
-        this.buttonMatch.AutoSize = true;
-        this.buttonMatch.Location = new System.Drawing.Point(16, 20);
-        this.buttonMatch.Name = "buttonMatch";
-        this.buttonMatch.Size = new System.Drawing.Size(41, 25);
-        this.buttonMatch.TabIndex = 0;
-        this.buttonMatch.Text = "探索";
-        this.buttonMatch.UseVisualStyleBackColor = true;
-        this.buttonMatch.Click += new System.EventHandler(this.ButtonMatch_Click);
+        buttonMatch.AutoSize = true;
+        buttonMatch.Location = new Point(16, 20);
+        buttonMatch.Name = "buttonMatch";
+        buttonMatch.Size = new Size(41, 25);
+        buttonMatch.TabIndex = 0;
+        buttonMatch.Text = "探索";
+        buttonMatch.UseVisualStyleBackColor = true;
+        buttonMatch.Click += ButtonMatch_Click;
         // 
         // groupBoxList
         // 
-        this.groupBoxList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-        | System.Windows.Forms.AnchorStyles.Right)));
-        this.groupBoxList.Controls.Add(this.listViewRoomList);
-        this.groupBoxList.Enabled = false;
-        this.groupBoxList.Location = new System.Drawing.Point(389, 155);
-        this.groupBoxList.Name = "groupBoxList";
-        this.groupBoxList.Size = new System.Drawing.Size(183, 274);
-        this.groupBoxList.TabIndex = 4;
-        this.groupBoxList.TabStop = false;
-        this.groupBoxList.Text = "部屋一覧";
+        groupBoxList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+        groupBoxList.Controls.Add(listViewRoomList);
+        groupBoxList.Enabled = false;
+        groupBoxList.Location = new Point(389, 155);
+        groupBoxList.Name = "groupBoxList";
+        groupBoxList.Size = new Size(183, 274);
+        groupBoxList.TabIndex = 4;
+        groupBoxList.TabStop = false;
+        groupBoxList.Text = "部屋一覧";
         // 
         // listViewRoomList
         // 
-        this.listViewRoomList.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-        | System.Windows.Forms.AnchorStyles.Left) 
-        | System.Windows.Forms.AnchorStyles.Right)));
-        this.listViewRoomList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-        this.columnHeaderRoomListNo,
-        this.columnHeaderRoomListPlayers,
-        this.columnHeaderRoomListRating});
-        this.listViewRoomList.HideSelection = false;
-        this.listViewRoomList.Location = new System.Drawing.Point(11, 22);
-        this.listViewRoomList.Name = "listViewRoomList";
-        this.listViewRoomList.Size = new System.Drawing.Size(157, 235);
-        this.listViewRoomList.TabIndex = 0;
-        this.listViewRoomList.UseCompatibleStateImageBehavior = false;
-        this.listViewRoomList.View = System.Windows.Forms.View.Details;
+        listViewRoomList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        listViewRoomList.Columns.AddRange(new ColumnHeader[] { columnHeaderRoomListNo, columnHeaderRoomListPlayers, columnHeaderRoomListRating });
+        listViewRoomList.Location = new Point(11, 22);
+        listViewRoomList.Name = "listViewRoomList";
+        listViewRoomList.Size = new Size(157, 235);
+        listViewRoomList.TabIndex = 0;
+        listViewRoomList.UseCompatibleStateImageBehavior = false;
+        listViewRoomList.View = View.Details;
         // 
         // columnHeaderRoomListNo
         // 
-        this.columnHeaderRoomListNo.Text = "番号";
-        this.columnHeaderRoomListNo.Width = 40;
+        columnHeaderRoomListNo.Text = "番号";
+        columnHeaderRoomListNo.Width = 40;
         // 
         // columnHeaderRoomListPlayers
         // 
-        this.columnHeaderRoomListPlayers.Text = "人数";
-        this.columnHeaderRoomListPlayers.Width = 40;
+        columnHeaderRoomListPlayers.Text = "人数";
+        columnHeaderRoomListPlayers.Width = 40;
         // 
         // columnHeaderRoomListRating
         // 
-        this.columnHeaderRoomListRating.Text = "レーティング";
-        this.columnHeaderRoomListRating.Width = 70;
+        columnHeaderRoomListRating.Text = "レーティング";
+        columnHeaderRoomListRating.Width = 70;
         // 
         // groupBoxGame
         // 
-        this.groupBoxGame.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-        | System.Windows.Forms.AnchorStyles.Left) 
-        | System.Windows.Forms.AnchorStyles.Right)));
-        this.groupBoxGame.Controls.Add(this.buttonShiritori);
-        this.groupBoxGame.Controls.Add(this.listViewMemberList);
-        this.groupBoxGame.Controls.Add(this.labelMemberList);
-        this.groupBoxGame.Controls.Add(this.buttonLeaveRoom);
-        this.groupBoxGame.Controls.Add(this.textBoxRoomNo);
-        this.groupBoxGame.Controls.Add(this.labelRoomNo);
-        this.groupBoxGame.Enabled = false;
-        this.groupBoxGame.Location = new System.Drawing.Point(13, 233);
-        this.groupBoxGame.Name = "groupBoxGame";
-        this.groupBoxGame.Size = new System.Drawing.Size(353, 196);
-        this.groupBoxGame.TabIndex = 5;
-        this.groupBoxGame.TabStop = false;
-        this.groupBoxGame.Text = "ゲームプレイ";
+        groupBoxGame.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        groupBoxGame.Controls.Add(buttonReactionGame);
+        groupBoxGame.Controls.Add(listViewMemberList);
+        groupBoxGame.Controls.Add(labelMemberList);
+        groupBoxGame.Controls.Add(buttonLeaveRoom);
+        groupBoxGame.Controls.Add(textBoxRoomNo);
+        groupBoxGame.Controls.Add(labelRoomNo);
+        groupBoxGame.Enabled = false;
+        groupBoxGame.Location = new Point(13, 233);
+        groupBoxGame.Name = "groupBoxGame";
+        groupBoxGame.Size = new Size(353, 196);
+        groupBoxGame.TabIndex = 5;
+        groupBoxGame.TabStop = false;
+        groupBoxGame.Text = "ゲームプレイ";
         // 
-        // buttonShiritori
+        // buttonReactionGame
         // 
-        this.buttonShiritori.AutoSize = true;
-        this.buttonShiritori.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-        this.buttonShiritori.Location = new System.Drawing.Point(173, 90);
-        this.buttonShiritori.Name = "buttonShiritori";
-        this.buttonShiritori.Size = new System.Drawing.Size(130, 47);
-        this.buttonShiritori.TabIndex = 0;
-        this.buttonShiritori.Text = "しりとりスタート";
-        this.buttonShiritori.UseVisualStyleBackColor = true;
-        this.buttonShiritori.Click += new System.EventHandler(this.ButtonShiritori_Click);
+        buttonReactionGame.AutoSize = true;
+        buttonReactionGame.Font = new Font("Yu Gothic UI", 12F);
+        buttonReactionGame.Location = new Point(173, 90);
+        buttonReactionGame.Name = "buttonReactionGame";
+        buttonReactionGame.Size = new Size(143, 47);
+        buttonReactionGame.TabIndex = 0;
+        buttonReactionGame.Text = "早押しゲーム起動";
+        buttonReactionGame.UseVisualStyleBackColor = true;
+        buttonReactionGame.Click += ButtonReactionGame_Click;
         // 
         // listViewMemberList
         // 
-        this.listViewMemberList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-        | System.Windows.Forms.AnchorStyles.Left)));
-        this.listViewMemberList.HideSelection = false;
-        this.listViewMemberList.Location = new System.Drawing.Point(14, 78);
-        this.listViewMemberList.Name = "listViewMemberList";
-        this.listViewMemberList.Size = new System.Drawing.Size(84, 101);
-        this.listViewMemberList.TabIndex = 5;
-        this.listViewMemberList.UseCompatibleStateImageBehavior = false;
-        this.listViewMemberList.View = System.Windows.Forms.View.List;
+        listViewMemberList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+        listViewMemberList.Location = new Point(14, 78);
+        listViewMemberList.Name = "listViewMemberList";
+        listViewMemberList.Size = new Size(84, 101);
+        listViewMemberList.TabIndex = 5;
+        listViewMemberList.UseCompatibleStateImageBehavior = false;
+        listViewMemberList.View = View.List;
         // 
         // labelMemberList
         // 
-        this.labelMemberList.AutoSize = true;
-        this.labelMemberList.Location = new System.Drawing.Point(6, 55);
-        this.labelMemberList.Name = "labelMemberList";
-        this.labelMemberList.Size = new System.Drawing.Size(46, 15);
-        this.labelMemberList.TabIndex = 4;
-        this.labelMemberList.Text = "参加者:";
+        labelMemberList.AutoSize = true;
+        labelMemberList.Location = new Point(6, 55);
+        labelMemberList.Name = "labelMemberList";
+        labelMemberList.Size = new Size(46, 15);
+        labelMemberList.TabIndex = 4;
+        labelMemberList.Text = "参加者:";
         // 
         // buttonLeaveRoom
         // 
-        this.buttonLeaveRoom.AutoSize = true;
-        this.buttonLeaveRoom.Location = new System.Drawing.Point(132, 21);
-        this.buttonLeaveRoom.Name = "buttonLeaveRoom";
-        this.buttonLeaveRoom.Size = new System.Drawing.Size(41, 25);
-        this.buttonLeaveRoom.TabIndex = 3;
-        this.buttonLeaveRoom.Text = "退室";
-        this.buttonLeaveRoom.UseVisualStyleBackColor = true;
-        this.buttonLeaveRoom.Click += new System.EventHandler(this.ButtonLeaveRoom_Click);
+        buttonLeaveRoom.AutoSize = true;
+        buttonLeaveRoom.Location = new Point(132, 21);
+        buttonLeaveRoom.Name = "buttonLeaveRoom";
+        buttonLeaveRoom.Size = new Size(41, 25);
+        buttonLeaveRoom.TabIndex = 3;
+        buttonLeaveRoom.Text = "退室";
+        buttonLeaveRoom.UseVisualStyleBackColor = true;
+        buttonLeaveRoom.Click += ButtonLeaveRoom_Click;
         // 
         // textBoxRoomNo
         // 
-        this.textBoxRoomNo.Location = new System.Drawing.Point(70, 22);
-        this.textBoxRoomNo.MaxLength = 10;
-        this.textBoxRoomNo.Name = "textBoxRoomNo";
-        this.textBoxRoomNo.ReadOnly = true;
-        this.textBoxRoomNo.Size = new System.Drawing.Size(56, 23);
-        this.textBoxRoomNo.TabIndex = 2;
+        textBoxRoomNo.Location = new Point(70, 22);
+        textBoxRoomNo.MaxLength = 10;
+        textBoxRoomNo.Name = "textBoxRoomNo";
+        textBoxRoomNo.ReadOnly = true;
+        textBoxRoomNo.Size = new Size(56, 23);
+        textBoxRoomNo.TabIndex = 2;
         // 
         // labelRoomNo
         // 
-        this.labelRoomNo.AutoSize = true;
-        this.labelRoomNo.Location = new System.Drawing.Point(6, 25);
-        this.labelRoomNo.Name = "labelRoomNo";
-        this.labelRoomNo.Size = new System.Drawing.Size(58, 15);
-        this.labelRoomNo.TabIndex = 1;
-        this.labelRoomNo.Text = "部屋番号:";
+        labelRoomNo.AutoSize = true;
+        labelRoomNo.Location = new Point(6, 25);
+        labelRoomNo.Name = "labelRoomNo";
+        labelRoomNo.Size = new Size(58, 15);
+        labelRoomNo.TabIndex = 1;
+        labelRoomNo.Text = "部屋番号:";
         // 
         // errorProvider
         // 
-        this.errorProvider.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
-        this.errorProvider.ContainerControl = this;
+        errorProvider.BlinkStyle = ErrorBlinkStyle.NeverBlink;
+        errorProvider.ContainerControl = this;
         // 
         // MainForm
         // 
-        this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-        this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-        this.ClientSize = new System.Drawing.Size(584, 441);
-        this.Controls.Add(this.groupBoxGame);
-        this.Controls.Add(this.groupBoxList);
-        this.Controls.Add(this.groupBoxMatch);
-        this.Controls.Add(this.groupBoxCreateRoom);
-        this.Controls.Add(this.groupBoxPlayer);
-        this.Controls.Add(this.groupBoxConfig);
-        this.MaximizeBox = false;
-        this.MaximumSize = new System.Drawing.Size(600, 600);
-        this.MinimumSize = new System.Drawing.Size(600, 480);
-        this.Name = "MainForm";
-        this.ShowIcon = false;
-        this.Text = "しりとり対戦アプリ";
-        this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
-        this.Load += new System.EventHandler(this.MainForm_Load);
-        this.groupBoxConfig.ResumeLayout(false);
-        this.groupBoxConfig.PerformLayout();
-        this.groupBoxPlayer.ResumeLayout(false);
-        this.groupBoxPlayer.PerformLayout();
-        this.groupBoxCreateRoom.ResumeLayout(false);
-        this.groupBoxCreateRoom.PerformLayout();
-        this.groupBoxMatch.ResumeLayout(false);
-        this.groupBoxMatch.PerformLayout();
-        this.groupBoxList.ResumeLayout(false);
-        this.groupBoxGame.ResumeLayout(false);
-        this.groupBoxGame.PerformLayout();
-        ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).EndInit();
-        this.ResumeLayout(false);
+        AutoScaleDimensions = new SizeF(7F, 15F);
+        AutoScaleMode = AutoScaleMode.Font;
+        ClientSize = new Size(584, 441);
+        Controls.Add(groupBoxGame);
+        Controls.Add(groupBoxList);
+        Controls.Add(groupBoxMatch);
+        Controls.Add(groupBoxCreateRoom);
+        Controls.Add(groupBoxPlayer);
+        Controls.Add(groupBoxConfig);
+        MaximizeBox = false;
+        MaximumSize = new Size(600, 600);
+        MinimumSize = new Size(600, 480);
+        Name = "MainForm";
+        ShowIcon = false;
+        Text = "早押し対戦アプリ";
+        FormClosed += MainForm_FormClosed;
+        Load += MainForm_Load;
+        groupBoxConfig.ResumeLayout(false);
+        groupBoxConfig.PerformLayout();
+        groupBoxPlayer.ResumeLayout(false);
+        groupBoxPlayer.PerformLayout();
+        groupBoxCreateRoom.ResumeLayout(false);
+        groupBoxCreateRoom.PerformLayout();
+        groupBoxMatch.ResumeLayout(false);
+        groupBoxMatch.PerformLayout();
+        groupBoxList.ResumeLayout(false);
+        groupBoxGame.ResumeLayout(false);
+        groupBoxGame.PerformLayout();
+        ((System.ComponentModel.ISupportInitialize)errorProvider).EndInit();
+        ResumeLayout(false);
 
     }
 
@@ -456,7 +441,7 @@ partial class MainForm
     private System.Windows.Forms.ColumnHeader columnHeaderRoomListNo;
     private System.Windows.Forms.ColumnHeader columnHeaderRoomListRating;
     private System.Windows.Forms.ColumnHeader columnHeaderRoomListPlayers;
-    private System.Windows.Forms.Button buttonShiritori;
+    private System.Windows.Forms.Button buttonReactionGame;
     private System.Windows.Forms.ErrorProvider errorProvider;
 }
 

@@ -1,15 +1,13 @@
 // ================================================================================================
 // <summary>
-//      しりとりゲームサービスクラスソース</summary>
+//      早押しゲームサービスクラスソース</summary>
 //
-// <copyright file="ShiritoriService.cs">
+// <copyright file="ReactionGameService.cs">
 //      Copyright (C) 2026 Koichi Tanaka. All rights reserved.</copyright>
 // <author>
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-using System;
-using System.Threading.Tasks;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Honememo.MatchingApiExample.Entities;
@@ -18,21 +16,21 @@ using Honememo.MatchingApiExample.Protos;
 using Honememo.MatchingApiExample.Repositories;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
-using Shiritori = Honememo.MatchingApiExample.Entities.Shiritori;
+using ReactionGame = Honememo.MatchingApiExample.Entities.ReactionGame;
 
 namespace Honememo.MatchingApiExample.Services;
 
 /// <summary>
-/// しりとりゲームサービス。
+/// 早押しゲームサービス。
 /// </summary>
+/// <remarks>ランダムな開始の合図からの、ボタンを押す速さを競うゲームのロジックを扱う。</remarks>
 [Authorize]
-public class ShiritoriService : Protos.Shiritori.ShiritoriBase
+public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
 {
     /// <summary>
     /// ロガー。
     /// </summary>
-    private readonly ILogger<ShiritoriService> logger;
+    private readonly ILogger<ReactionGameService> logger;
 
     /// <summary>
     /// Mapsterインスタンス。
@@ -56,7 +54,7 @@ public class ShiritoriService : Protos.Shiritori.ShiritoriBase
     /// <param name="mapper">Mapsterインスタンス。</param>
     /// <param name="gameRepository">ゲームリポジトリ。</param>
     /// <param name="roomRepository">ルームリポジトリ。</param>
-    public ShiritoriService(ILogger<ShiritoriService> logger, IMapper mapper, GameRepository gameRepository, RoomRepository roomRepository)
+    public ReactionGameService(ILogger<ReactionGameService> logger, IMapper mapper, GameRepository gameRepository, RoomRepository roomRepository)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -83,13 +81,13 @@ public class ShiritoriService : Protos.Shiritori.ShiritoriBase
             throw new FailedPreconditionException($"Room No={room.No} is not full");
         }
 
-        Shiritori game;
+        ReactionGame game;
         lock (room)
         {
             if (room.GameId == null)
             {
                 // 部屋がまだゲームを開始していない場合は、ゲームを開始する
-                game = new Shiritori(room.PlayerIds);
+                game = new ReactionGame(room.PlayerIds);
                 this.gameRepository.AddGame(game);
                 room.GameId = game.Id;
             }
@@ -107,27 +105,16 @@ public class ShiritoriService : Protos.Shiritori.ShiritoriBase
     }
 
     /// <summary>
-    /// 自分の手番に単語を回答する。
+    /// ボタンを押す。
     /// </summary>
-    /// <param name="request">回答。</param>
-    /// <param name="context">実行コンテキスト。</param>
-    /// <returns>回答結果。</returns>
-    /// <exception cref="FailedPreconditionException">プレイヤーの手番でない場合。</exception>
-    /// <exception cref="InvalidArgumentException">回答が空や対象外の文字列の場合。</exception>
-    public override async Task<AnswerReply> Answer(AnswerRequest request, ServerCallContext context)
-    {
-        return new AnswerReply { Result = this.GetGame(context).Answer(context.GetPlayerId(), request.Word) };
-    }
-
-    /// <summary>
-    /// 直前の他人の回答に異議を送信する。
-    /// </summary>
-    /// <param name="request">空パラメータ。</param>
+    /// <param name="request">押下日時。</param>
     /// <param name="context">実行コンテキスト。</param>
     /// <returns>空レスポンス。</returns>
-    public override async Task<Empty> Claim(Empty request, ServerCallContext context)
+    public override async Task<Empty> Submit(SubmitRequest request, ServerCallContext context)
     {
-        this.GetGame(context).Claim(context.GetPlayerId());
+        var game = this.GetGame(context);
+        var pressDate = request.Date?.ToDateTimeOffset() ?? DateTimeOffset.UtcNow;
+        game.Submit(context.GetPlayerId(), pressDate);
         return new Empty();
     }
 
@@ -138,10 +125,12 @@ public class ShiritoriService : Protos.Shiritori.ShiritoriBase
     /// <param name="responseStream">レスポンス用のストリーム。</param>
     /// <param name="context">実行コンテキスト。</param>
     /// <returns>処理状態。</returns>
-    private async Task WatchGame(Shiritori game, IServerStreamWriter<GameEventReply> responseStream, ServerCallContext context)
+    private async Task WatchGame(ReactionGame game, IServerStreamWriter<GameEventReply> responseStream, ServerCallContext context)
     {
+        var room = this.GetRoom(context);
+
         // ゲームイベントの監視を開始する
-        EventHandler<Shiritori.GameEventArgs> f = async (sender, e) =>
+        EventHandler<ReactionGame.GameEventArgs> f = async (sender, e) =>
         {
             if (!context.CancellationToken.IsCancellationRequested)
             {
@@ -162,8 +151,8 @@ public class ShiritoriService : Protos.Shiritori.ShiritoriBase
     /// </summary>
     /// <param name="context">実行コンテキスト。</param>
     /// <returns>参加中のゲーム。</returns>
-    /// <exception cref="FailedPreconditionException">しりとりゲームをプレイしていない場合。</exception>
-    private Shiritori GetGame(ServerCallContext context)
+    /// <exception cref="FailedPreconditionException">早押しゲームをプレイしていない場合。</exception>
+    private ReactionGame GetGame(ServerCallContext context)
     {
         var room = this.GetRoom(context);
         if (room.GameId == null)
@@ -179,16 +168,16 @@ public class ShiritoriService : Protos.Shiritori.ShiritoriBase
     /// </summary>
     /// <param name="gameId">ゲームID。</param>
     /// <returns>参加中のゲーム。</returns>
-    /// <exception cref="FailedPreconditionException">しりとりゲームのIDでない場合。</exception>
-    private Shiritori GetGame(string gameId)
+    /// <exception cref="FailedPreconditionException">早押しゲームのIDでない場合。</exception>
+    private ReactionGame GetGame(string gameId)
     {
         var game = this.gameRepository.GetGame(gameId);
-        if (game is Shiritori s)
+        if (game is ReactionGame s)
         {
             return s;
         }
 
-        throw new FailedPreconditionException($"Game ID={gameId} is not shiritori game");
+        throw new FailedPreconditionException($"Game ID={gameId} is not reaction game");
     }
 
     /// <summary>
