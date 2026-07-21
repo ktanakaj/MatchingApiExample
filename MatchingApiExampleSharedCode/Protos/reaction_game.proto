@@ -20,12 +20,12 @@ enum ReactionGameEventType {
   READY = 0;
   START = 1;
   SUBMITABLE = 2;
-  SUBMITEED = 3;
+  SUBMITTED = 3;
   END = 4;
   ABORT = 5;
 }
 
-// 回答結果列挙体。
+// 押下結果列挙体。
 enum ReactionGameResult {
   OK = 0;
   NG = 1;
@@ -44,6 +44,8 @@ message GameEventReply {
   ReactionGameEventType type = 1;
   // プレイヤーID。
   int32 playerId = 2;
-  // 回答の結果。
+  // イベントに関連する日時。
+  google.protobuf.Timestamp date = 3;
+  // 押下の結果。
   ReactionGameResult result = 4;
 }

@@ -91,16 +91,15 @@ public class ReactionGameFormService : IDisposable
         }
     }
 
-    // TODO: 他のプレイヤーの入室を待っています… → 準備完了！もうすぐゲームが始まります。 → よーい… → スタート！ → 自分のスコア表示 → 勝者決定 → 次のゲーム → 他のプレイヤーの操作を待っています…
-
     /// <summary>
-    /// 自分の手番に単語を回答する。
+    /// ボタンを押す。
     /// </summary>
-    /// <param name="word">単語。</param>
+    /// <param name="pressTime">押下日時。</param>
     /// <returns>処理状態。</returns>
-    public async Task<AnswerReply> Answer(string word)
+    public async Task Submit(DateTimeOffset pressTime)
     {
-        return await this.reactionGameService.AnswerAsync(new AnswerRequest { Word = word });
+        var ts = Timestamp.FromDateTimeOffset(pressTime);
+        await this.reactionGameService.SubmitAsync(new SubmitRequest { Date = ts });
     }
 
     /// <summary>

@@ -9,9 +9,8 @@
 // ================================================================================================
 
 using System.Collections.Immutable;
-using System.Text.RegularExpressions;
 using Honememo.MatchingApiExample.Exceptions;
-using Microsoft.VisualBasic;
+using Honememo.MatchingApiExample.Protos;
 
 namespace Honememo.MatchingApiExample.Entities;
 
@@ -25,36 +24,14 @@ namespace Honememo.MatchingApiExample.Entities;
 public class ReactionGame : IGame
 {
     /// <summary>
-    /// 回答持ち時間（秒）。
+    /// 合図 (SUBMITABLE) までの最小遅延（ミリ秒）。
     /// </summary>
-    private const int InputLimit = 10;
+    private const int MinCueDelayMs = 800;
 
     /// <summary>
-    /// 一人のプレイヤーが可能な最大クレーム回数。
+    /// 合図 (SUBMITABLE) までの最大遅延（ミリ秒）。
     /// </summary>
-    private const int MaxClaims = 2;
-
-    /// <summary>
-    /// ゲーム開始時に最初の文字の候補。
-    /// </summary>
-    private const string FirstChars = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわ";
-
-    /// <summary>
-    /// ひらがなの小文字/大文字対応表。
-    /// </summary>
-    private readonly IDictionary<char, char> hiraganaLowerAndUpper = new Dictionary<char, char>()
-    {
-        { 'ぁ', 'あ' },
-        { 'ぃ', 'い' },
-        { 'ぅ', 'う' },
-        { 'ぇ', 'え' },
-        { 'ぉ', 'お' },
-        { 'っ', 'つ' },
-        { 'ゃ', 'や' },
-        { 'ゅ', 'ゆ' },
-        { 'ょ', 'よ' },
-        { 'ゎ', 'わ' },
-    };
+    private const int MaxCueDelayMs = 3500;
 
     /// <summary>
     /// ロックオブジェクト。
@@ -69,20 +46,25 @@ public class ReactionGame : IGame
     /// <summary>
     /// ゲームイベントの履歴。
     /// </summary>
-    /// <remarks>
-    /// 単純なゲーム的には履歴で持つより現在の情報だけ持った方が楽だが、
-    /// 今回は異議申し立ての仕組みがあるので、履歴で持つ。
-    /// </remarks>
-    private IList<GameEventArgs> events = new List<GameEventArgs>();
+    private readonly IList<GameEventArgs> events = new List<GameEventArgs>();
 
     /// <summary>
-    /// 回答済みの単語セット。
+    /// 各プレイヤーの押下記録 (playerId -> press time)。
     /// </summary>
-    /// <remarks>正規化した単語を記録する。</remarks>
-    private ISet<string> usedWords = new HashSet<string>();
+    private readonly Dictionary<int, DateTimeOffset> submissions = new Dictionary<int, DateTimeOffset>();
 
     /// <summary>
-    /// 渡されたプレイヤーでしりとりゲームを開始する。
+    /// 合図が出た日時（これ以降の押下が有効）。
+    /// </summary>
+    private DateTimeOffset? submitableAt;
+
+    /// <summary>
+    /// 勝者プレイヤーID（最初に有効押下した者）。
+    /// </summary>
+    private int? winnerId;
+
+    /// <summary>
+    /// 渡されたプレイヤーで早押しゲームを開始する。
     /// </summary>
     /// <param name="playerIds">ゲームを行うプレイヤーのID配列。</param>
     /// <exception cref="InvalidArgumentException">プレイヤーが二人未満の場合。</exception>
@@ -90,12 +72,11 @@ public class ReactionGame : IGame
     {
         if (playerIds.Count <= 1)
         {
-            throw new InvalidArgumentException($"Players must be greater than 2 (count={playerIds.Count})");
+            throw new InvalidArgumentException($"Players must be greater than 1 (count={playerIds.Count})");
         }
 
-        // ※ スタートイベントはコンストラクタなので通知しようがないが一応記録
+        // スタートは全Ready後（ScheduleSubmitableでランダム合図）
         this.PlayerIds = playerIds.ToImmutableList();
-        this.FireStartEvent();
     }
 
     /// <summary>
@@ -121,7 +102,12 @@ public class ReactionGame : IGame
     /// <summary>
     /// ゲーム終了済みか？
     /// </summary>
-    public bool Disposed => this.events.LastOrDefault(e => e.Type == ShiritoriEventType.End || e.Type == ShiritoriEventType.Abort) != null;
+    public bool Disposed => this.events.LastOrDefault(e => e.Type == ReactionGameEventType.End || e.Type == ReactionGameEventType.Abort) != null;
+
+    /// <summary>
+    /// 勝者プレイヤーID（有効な最初押下者）。
+    /// </summary>
+    public int? WinnerId => this.winnerId;
 
     /// <summary>
     /// プレイヤーの準備を完了する。
@@ -147,96 +133,53 @@ public class ReactionGame : IGame
             // 準備完了イベントを起こす
             this.FireReadyEvent(playerId);
 
-            // 全員が準備完了になったら、最初のプレイヤーに手番を振る
-            if (this.IsReady())
+            if (this.AllReady())
             {
-                this.NextTurn(this.PlayerIds.First(), this.RandomFirstChar());
+                this.FireStartEvent();
+                this.ScheduleSubmitable();
             }
         }
     }
 
     /// <summary>
-    /// 自分の手番に単語を回答する。
+    /// ボタンを押す（早押し）。
     /// </summary>
-    /// <param name="playerId">回答するプレイヤーのID。</param>
-    /// <param name="word">回答した単語。</param>
-    /// <returns>回答の結果。</returns>
-    /// <exception cref="FailedPreconditionException">プレイヤーの手番でない場合。</exception>
-    /// <exception cref="InvalidArgumentException">回答が空や対象外の文字列の場合。</exception>
-    /// <remarks>回答結果は戻り値とイベントで返す。</remarks>
-    public ShiritoriResult Answer(int playerId, string word)
+    /// <param name="playerId">押したプレイヤーのID。</param>
+    /// <param name="pressDate">クライアント報告の押下日時。</param>
+    /// <exception cref="FailedPreconditionException">プレイヤーが参加者でない場合。</exception>
+    public void Submit(int playerId, DateTimeOffset pressDate)
     {
         lock (this.lockObj)
         {
-            // 自分に手番が来ていない場合はエラー
-            if (!this.TryGetInputTurn(out GameEventArgs input) || input.PlayerId != playerId)
+            this.ThrowExceptionIfDisposed();
+            if (!this.PlayerIds.Contains(playerId))
             {
-                throw new FailedPreconditionException($"Player ID={playerId} is not turn");
+                throw new FailedPreconditionException($"Player ID={playerId} is not joined in Game ID={this.Id}");
             }
 
-            // 単語をひらがなに正規化する
-            var w = this.ToNormalize(word);
-
-            // 引数のシステム的なバリデーション
-            this.ValidateWord(w);
-
-            // 答えをチェックして結果通知
-            var result = ShiritoriResult.Ng;
-            if (w!.StartsWith(input.Word!) && !this.usedWords.Contains(w))
+            if (!this.submitableAt.HasValue || this.Disposed)
             {
-                result = w.EndsWith('ん') ? ShiritoriResult.Gameover : ShiritoriResult.Ok;
-            }
-
-            this.FireAnswerEvent(playerId, word, result);
-
-            if (result == ShiritoriResult.Ok)
-            {
-                // 正解の場合、次のプレイヤーの手番にする
-                this.usedWords.Add(w);
-                var i = this.PlayerIds.IndexOf(playerId);
-                this.NextTurn(i + 1 < this.PlayerIds.Count() ? this.PlayerIds[i + 1] : this.PlayerIds[0], this.GetLastChar(w));
-            }
-            else if (result == ShiritoriResult.Gameover)
-            {
-                // ゲームオーバーの場合、ゲームを終了する
-                this.FireEndEvent();
-            }
-
-            return result;
-        }
-    }
-
-    /// <summary>
-    /// 直前の他人の回答へ異議を申し立てる。
-    /// </summary>
-    /// <param name="playerId">異議を唱えたプレイヤーのID。</param>
-    /// <exception cref="FailedPreconditionException">異議の対象が自分の回答の場合。</exception>
-    /// <remarks>
-    /// 単語のチェックを行わない代償として、もし不満に思ったプレイヤーが居たら異議を申し立ててもらう。
-    /// 一定回数同じプレイヤーから異議が申し立てられたら、ゲーム不成立として引き分け。
-    /// </remarks>
-    public void Claim(int playerId)
-    {
-        lock (this.lockObj)
-        {
-            // 一つ前の手番を取得。対象かチェック
-            if (!this.TryGetInputTurn(1, out GameEventArgs input) || input.PlayerId == playerId)
-            {
-                throw new FailedPreconditionException($"Claim is not available");
-            }
-
-            // 異議を通知
-            this.FireClaimEvent(playerId);
-
-            // 一定回数同じプレイヤーから異議が申し立てられたら、ゲーム不成立として引き分け
-            if (this.CountClaims(playerId) >= MaxClaims)
-            {
-                this.FireAbortEvent();
+                this.FireSubmittedEvent(playerId, ReactionGameResult.Ng, pressDate);
                 return;
             }
 
-            // それ以外は、前回の手番に戻す
-            this.NextTurn(input.PlayerId!.Value, input.Word!.Last());
+            if (this.submissions.ContainsKey(playerId))
+            {
+                return;
+            }
+
+            this.submissions[playerId] = pressDate;
+
+            if (this.winnerId == null)
+            {
+                this.winnerId = playerId;
+                this.FireSubmittedEvent(playerId, ReactionGameResult.Ok, pressDate);
+                this.FireEndEvent();
+            }
+            else
+            {
+                this.FireSubmittedEvent(playerId, ReactionGameResult.Ng, pressDate);
+            }
         }
     }
 
@@ -277,161 +220,37 @@ public class ReactionGame : IGame
     private bool IsReady(int playerId)
     {
         // 準備完了イベントは先頭にある筈なので先頭から見る
-        return this.events.FirstOrDefault(e => e.Type == ShiritoriEventType.Ready && e.PlayerId == playerId) != null;
+        return this.events.FirstOrDefault(e => e.Type == ReactionGameEventType.Ready && e.PlayerId == playerId) != null;
     }
 
     /// <summary>
-    /// ゲームが準備完了済みか？
+    /// 全員が準備完了済みか？
     /// </summary>
     /// <returns>準備完了済の場合true。</returns>
-    private bool IsReady()
+    private bool AllReady()
     {
         // 全プレイヤーが準備完了済みならOK
-        return this.events.Count(e => e.Type == ShiritoriEventType.Ready) >= this.PlayerIds.Count();
+        return this.events.Count(e => e.Type == ReactionGameEventType.Ready) >= this.PlayerIds.Count;
     }
 
     /// <summary>
-    /// プレイヤーの異議申立の回数を集計する。
+    /// ランダム遅延後にSUBMITABLEを発火するスケジュール。
     /// </summary>
-    /// <param name="playerId">集計するプレイヤーのID。</param>
-    /// <returns>合計申立回数。</returns>
-    private int CountClaims(int playerId)
+    private void ScheduleSubmitable()
     {
-        return this.events.Count(e => e.Type == ShiritoriEventType.Claim && e.PlayerId == playerId);
-    }
-
-    /// <summary>
-    /// 現在の回答者の情報を取得する。
-    /// </summary>
-    /// <param name="input">回答者の情報。</param>
-    /// <returns>取得できた場合true。</returns>
-    private bool TryGetInputTurn(out GameEventArgs input)
-    {
-        return this.TryGetInputTurn(0, out input);
-    }
-
-    /// <summary>
-    /// 回答者の情報を取得する。
-    /// </summary>
-    /// <param name="prev">過去の回答者の場合、何回前か。※0が最新</param>
-    /// <param name="input">回答者の情報。</param>
-    /// <returns>取得できた場合true。</returns>
-    private bool TryGetInputTurn(int prev, out GameEventArgs input)
-    {
-        input = default!;
-        foreach (var e in this.events.Reverse())
+        var delayMs = this.rand.Next(MinCueDelayMs, MaxCueDelayMs + 1);
+        _ = Task.Run(async () =>
         {
-            if (e.Type == ShiritoriEventType.End)
+            await Task.Delay(delayMs);
+            lock (this.lockObj)
             {
-                return false;
+                if (!this.Disposed && !this.submitableAt.HasValue)
+                {
+                    this.submitableAt = DateTimeOffset.UtcNow;
+                    this.FireSubmitableEvent();
+                }
             }
-            else if (e.Type == ShiritoriEventType.Claim)
-            {
-                ++prev;
-            }
-            else if (e.Type == ShiritoriEventType.Input && prev-- <= 0)
-            {
-                input = e;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// 次のターンを開始する。
-    /// </summary>
-    /// <param name="playerId">回答するプレイヤーのID。</param>
-    /// <param name="startChar">次の単語の先頭文字。</param>
-    private void NextTurn(int playerId, char startChar)
-    {
-        var e = this.FireInputEvent(playerId, startChar, DateTimeOffset.Now.AddSeconds(InputLimit));
-        this.CheckInputLimit(e);
-    }
-
-    /// <summary>
-    /// 回答の制限時間をチェックする。
-    /// </summary>
-    /// <param name="e">入力イベント。</param>
-    private async void CheckInputLimit(GameEventArgs e)
-    {
-        await Task.Delay(e.Limit!.Value - DateTimeOffset.Now);
-        lock (this.lockObj)
-        {
-            if (this.TryGetInputTurn(out GameEventArgs input) && input == e)
-            {
-                this.FireAnswerEvent(e.PlayerId!.Value, string.Empty, ShiritoriResult.Gameover);
-                this.FireEndEvent();
-            }
-        }
-    }
-
-    /// <summary>
-    /// ゲームスタート時に使う最初の文字を抽選する。
-    /// </summary>
-    /// <returns>抽選した文字。</returns>
-    private char RandomFirstChar()
-    {
-        // 候補のひらがなの中から、一文字を抽選する
-        return FirstChars[this.rand.Next(0, FirstChars.Length)];
-    }
-
-    /// <summary>
-    /// 入力された単語をバリデーションする。
-    /// </summary>
-    /// <param name="word">チェックする文字列。※正規化済</param>
-    /// <exception cref="InvalidArgumentException">回答がバリデーションNGの場合。</exception>
-    /// <remarks>回答としてNGではなく、そもそも引数として渡されるべきではないものをチェックする。</remarks>
-    private void ValidateWord(string? word)
-    {
-        if (string.IsNullOrEmpty(word))
-        {
-            throw new InvalidArgumentException("Word is null or empty");
-        }
-        else if (word.Length <= 1)
-        {
-            throw new InvalidArgumentException($"Word length must be longer than 1 (word={word})");
-        }
-        else if (!Regex.IsMatch(word, @"^(\p{IsHiragana}|ー|－)*$"))
-        {
-            // ひらがな／カタカナの他、延ばす記号も許容する
-            throw new InvalidArgumentException($"Word must be hiragana or katakana only (word={word})");
-        }
-    }
-
-    /// <summary>
-    /// 文字列をしりとり処理用に正規化する。
-    /// </summary>
-    /// <param name="s">正規化する文字列。</param>
-    /// <returns>正規化した文字列。</returns>
-    private string? ToNormalize(string? s)
-    {
-        // 半角/全角カタカナをひらがなに
-#pragma warning disable CA1416 // プラットフォームの互換性を検証
-        return s != null ? Strings.StrConv(s, VbStrConv.Wide | VbStrConv.Hiragana) : null;
-#pragma warning restore CA1416 // プラットフォームの互換性を検証
-    }
-
-    /// <summary>
-    /// しりとり的な最後の文字を取得する。
-    /// </summary>
-    /// <param name="word">単語。※正規化済</param>
-    /// <returns>最後の文字。</returns>
-    private char GetLastChar(string word)
-    {
-        // 小文字を大文字に、「を」は「お」扱い、ハイフン以外で
-        var last = word.Where(c => c != 'ー' && c != '－').Last();
-        if (last == 'を')
-        {
-            return 'お';
-        }
-        else if (this.hiraganaLowerAndUpper.TryGetValue(last, out char upper))
-        {
-            return upper;
-        }
-
-        return last;
+        });
     }
 
     /// <summary>
@@ -440,7 +259,7 @@ public class ReactionGame : IGame
     /// <returns>発生したイベント。</returns>
     private GameEventArgs FireStartEvent()
     {
-        var e = new GameEventArgs(ShiritoriEventType.Start);
+        var e = new GameEventArgs(ReactionGameEventType.Start);
         this.FireGameEvent(e);
         return e;
     }
@@ -452,47 +271,32 @@ public class ReactionGame : IGame
     /// <returns>発生したイベント。</returns>
     private GameEventArgs FireReadyEvent(int playerId)
     {
-        var e = new GameEventArgs(ShiritoriEventType.Ready) { PlayerId = playerId };
+        var e = new GameEventArgs(ReactionGameEventType.Ready) { PlayerId = playerId };
         this.FireGameEvent(e);
         return e;
     }
 
     /// <summary>
-    /// 入力イベントを発生させる。
+    /// 押下開始イベントを発生させる。
     /// </summary>
-    /// <param name="playerId">入力するプレイヤーのID。</param>
-    /// <param name="startChar">次のしりとりの文字。</param>
-    /// <param name="limit">制限時間。</param>
     /// <returns>発生したイベント。</returns>
-    private GameEventArgs FireInputEvent(int playerId, char startChar, DateTimeOffset limit)
+    private GameEventArgs FireSubmitableEvent()
     {
-        var e = new GameEventArgs(ShiritoriEventType.Input) { PlayerId = playerId, Word = startChar.ToString(), Limit = limit };
+        var e = new GameEventArgs(ReactionGameEventType.Submitable) { Date = this.submitableAt };
         this.FireGameEvent(e);
         return e;
     }
 
     /// <summary>
-    /// 回答イベントを発生させる。
+    /// 押下イベントを発生させる。
     /// </summary>
     /// <param name="playerId">回答したプレイヤーのID。</param>
-    /// <param name="word">回答した単語。</param>
-    /// <param name="result">回答の結果。</param>
+    /// <param name="result">押下の結果。</param>
+    /// <param name="pressDate">押下日時。</param>
     /// <returns>発生したイベント。</returns>
-    private GameEventArgs FireAnswerEvent(int playerId, string word, ShiritoriResult result)
+    private GameEventArgs FireSubmittedEvent(int playerId, ReactionGameResult result, DateTimeOffset? pressDate = null)
     {
-        var e = new GameEventArgs(ShiritoriEventType.Answer) { PlayerId = playerId, Word = word, Result = result };
-        this.FireGameEvent(e);
-        return e;
-    }
-
-    /// <summary>
-    /// 異議申立イベントを発生させる。
-    /// </summary>
-    /// <param name="playerId">異議を送信したプレイヤーのID。</param>
-    /// <returns>発生したイベント。</returns>
-    private GameEventArgs FireClaimEvent(int playerId)
-    {
-        var e = new GameEventArgs(ShiritoriEventType.Claim) { PlayerId = playerId };
+        var e = new GameEventArgs(ReactionGameEventType.Submitted) { PlayerId = playerId, Result = result, Date = pressDate };
         this.FireGameEvent(e);
         return e;
     }
@@ -503,7 +307,7 @@ public class ReactionGame : IGame
     /// <returns>発生したイベント。</returns>
     private GameEventArgs FireEndEvent()
     {
-        var e = new GameEventArgs(ShiritoriEventType.End);
+        var e = new GameEventArgs(ReactionGameEventType.End);
         this.FireGameEvent(e);
         return e;
     }
@@ -514,7 +318,7 @@ public class ReactionGame : IGame
     /// <returns>発生したイベント。</returns>
     private GameEventArgs FireAbortEvent()
     {
-        var e = new GameEventArgs(ShiritoriEventType.Abort);
+        var e = new GameEventArgs(ReactionGameEventType.Abort);
         this.FireGameEvent(e);
         return e;
     }
@@ -542,7 +346,7 @@ public class ReactionGame : IGame
         /// 指定された種類のゲームイベントを生成する。
         /// </summary>
         /// <param name="type">イベントの種類。</param>
-        public GameEventArgs(ShiritoriEventType type)
+        public GameEventArgs(ReactionGameEventType type)
         {
             this.Type = type;
         }
@@ -552,7 +356,7 @@ public class ReactionGame : IGame
         /// <summary>
         /// ゲームイベントの種類。
         /// </summary>
-        public ShiritoriEventType Type { get; }
+        public ReactionGameEventType Type { get; }
 
         /// <summary>
         /// イベントが発生したプレイヤーのID。
@@ -560,18 +364,13 @@ public class ReactionGame : IGame
         public int? PlayerId { get; set; }
 
         /// <summary>
-        /// 回答された単語。
+        /// 結果 (OK/NG)。
         /// </summary>
-        public string? Word { get; set; }
+        public ReactionGameResult? Result { get; set; }
 
         /// <summary>
-        /// 回答の結果。
+        /// イベント関連日時（合図時刻や押下時刻）。
         /// </summary>
-        public ShiritoriResult? Result { get; set; }
-
-        /// <summary>
-        /// 回答の期限。
-        /// </summary>
-        public DateTimeOffset? Limit { get; set; }
+        public DateTimeOffset? Date { get; set; }
     }
 }

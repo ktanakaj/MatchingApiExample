@@ -105,15 +105,16 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
     }
 
     /// <summary>
-    /// 自分の手番に単語を回答する。
+    /// ボタンを押す。
     /// </summary>
-    /// <param name="request">回答。</param>
+    /// <param name="request">押下日時。</param>
     /// <param name="context">実行コンテキスト。</param>
-    /// <returns>回答結果。</returns>
-    /// <exception cref="FailedPreconditionException">プレイヤーの手番でない場合。</exception>
-    /// <exception cref="InvalidArgumentException">回答が空や対象外の文字列の場合。</exception>
+    /// <returns>空レスポンス。</returns>
     public override async Task<Empty> Submit(SubmitRequest request, ServerCallContext context)
     {
+        var game = this.GetGame(context);
+        var pressDate = request.Date?.ToDateTimeOffset() ?? DateTimeOffset.UtcNow;
+        game.Submit(context.GetPlayerId(), pressDate);
         return new Empty();
     }
 
@@ -126,6 +127,8 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
     /// <returns>処理状態。</returns>
     private async Task WatchGame(ReactionGame game, IServerStreamWriter<GameEventReply> responseStream, ServerCallContext context)
     {
+        var room = this.GetRoom(context);
+
         // ゲームイベントの監視を開始する
         EventHandler<ReactionGame.GameEventArgs> f = async (sender, e) =>
         {
@@ -148,7 +151,7 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
     /// </summary>
     /// <param name="context">実行コンテキスト。</param>
     /// <returns>参加中のゲーム。</returns>
-    /// <exception cref="FailedPreconditionException">しりとりゲームをプレイしていない場合。</exception>
+    /// <exception cref="FailedPreconditionException">早押しゲームをプレイしていない場合。</exception>
     private ReactionGame GetGame(ServerCallContext context)
     {
         var room = this.GetRoom(context);
@@ -165,7 +168,7 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
     /// </summary>
     /// <param name="gameId">ゲームID。</param>
     /// <returns>参加中のゲーム。</returns>
-    /// <exception cref="FailedPreconditionException">しりとりゲームのIDでない場合。</exception>
+    /// <exception cref="FailedPreconditionException">早押しゲームのIDでない場合。</exception>
     private ReactionGame GetGame(string gameId)
     {
         var game = this.gameRepository.GetGame(gameId);
@@ -174,7 +177,7 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
             return s;
         }
 
-        throw new FailedPreconditionException($"Game ID={gameId} is not shiritori game");
+        throw new FailedPreconditionException($"Game ID={gameId} is not reaction game");
     }
 
     /// <summary>

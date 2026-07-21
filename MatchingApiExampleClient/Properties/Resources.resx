@@ -121,6 +121,28 @@
     <value>Error</value>
     <comment>エラーダイアログのタイトル</comment>
   </data>
+  <data name="ReactionGameCue" xml:space="preserve">
+    <value>よーい…</value>
+    <comment>早押しゲーム合図前メッセージ</comment>
+  </data>
+  <data name="ReactionGameEnded" xml:space="preserve">
+    <value>ゲーム終了</value>
+  </data>
+  <data name="ReactionGamePlayerWon" xml:space="preserve">
+    <value>プレイヤー{0} の勝ち！</value>
+  </data>
+  <data name="ReactionGamePressNow" xml:space="preserve">
+    <value>スタート！ 押してください！</value>
+  </data>
+  <data name="ReactionGameStarting" xml:space="preserve">
+    <value>準備完了！もうすぐゲームが始まります。</value>
+  </data>
+  <data name="ReactionGameWaiting" xml:space="preserve">
+    <value>他のプレイヤーの入室を待っています…</value>
+  </data>
+  <data name="ReactionGameYouWin" xml:space="preserve">
+    <value>あなたの勝ちです！</value>
+  </data>
   <data name="WarningMessageGreaterThan" xml:space="preserve">
     <value>{0}以上の値を入力してください</value>
     <comment>数値範囲のバリデーションメッセージ</comment>

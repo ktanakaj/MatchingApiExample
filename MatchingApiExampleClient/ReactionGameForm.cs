@@ -65,47 +65,56 @@ public partial class ReactionGameForm : Form
     }
 
     /// <summary>
-    /// しりとり入力決定ボタンクリック時のイベント処理。
+    /// 早押しボタンクリック時のイベント処理。
     /// </summary>
     /// <param name="sender">イベント発生元インスタンス。</param>
     /// <param name="e">イベントパラメータ。</param>
     private async void ButtonSubmit_Click(object sender, EventArgs e)
     {
-        // TODO: もっといろいろやる
-        var reply = await this.service.Answer(this.textBoxWord.Text);
-        switch (reply.Result)
-        {
-            // TODO: テキストはみんなリソースから取る
-            case ShiritoriResult.Ok:
-                this.labelResult.Text = "〇";
-                this.buttonSubmit.Enabled = false;
-                this.textBoxWord.Enabled = false;
-                break;
-            case ShiritoriResult.Ng:
-                this.labelResult.Text = "×";
-                break;
-            case ShiritoriResult.Gameover:
-                this.labelResult.Text = "×";
-                this.labelMessage.Text = "GameOver";
-                this.buttonSubmit.Enabled = false;
-                this.textBoxWord.Enabled = false;
-                break;
-        }
+        // 結果はストリーム経由のDoGameEventで反映
+        this.buttonSubmit.Enabled = false;
+        await this.service.Submit(DateTimeOffset.UtcNow);
     }
 
     /// <summary>
-    /// ルーム一覧を再描画する。
+    /// ゲームイベント受信時の処理。
     /// </summary>
     /// <param name="sender">イベント発生元インスタンス。</param>
     /// <param name="e">イベントパラメータ。</param>
     private void DoGameEvent(object sender, GameEventReply e)
     {
         // TODO: ちゃんとしたログを出す
-        this.textBoxLog.Text += $"Type={e.Type}, PlayerId={e.PlayerId}, Word={e.Word}, Result={e.Result}" + Environment.NewLine;
-        if (e.Type == ShiritoriEventType.Input && e.PlayerId == Settings.Default.PlayerId)
+        var dateSuffix = e.Date != null ? $", Date={e.Date.ToDateTimeOffset():HH:mm:ss.fff}" : string.Empty;
+        this.textBoxLog.Text += string.Format("Type={0}, PlayerId={1}, Result={2}{3}", e.Type, e.PlayerId, e.Result, dateSuffix) + Environment.NewLine;
+
+        switch (e.Type)
         {
-            this.textBoxWord.Enabled = true;
-            this.buttonSubmit.Enabled = true;
+            case ReactionGameEventType.Start:
+                this.labelMessage.Text = Resources.ReactionGameStarting;
+                break;
+            case ReactionGameEventType.Submitable:
+                this.labelMessage.Text = Resources.ReactionGamePressNow;
+                if (e.PlayerId == 0 || e.PlayerId == Settings.Default.PlayerId)
+                {
+                    this.buttonSubmit.Enabled = true;
+                }
+
+                break;
+            case ReactionGameEventType.Submitted:
+                this.buttonSubmit.Enabled = false;
+                if (e.Result == ReactionGameResult.Ok)
+                {
+                    this.labelMessage.Text = (e.PlayerId == Settings.Default.PlayerId)
+                                            ? Resources.ReactionGameYouWin
+                                            : string.Format(Resources.ReactionGamePlayerWon, e.PlayerId);
+                }
+
+                break;
+            case ReactionGameEventType.End:
+            case ReactionGameEventType.Abort:
+                this.labelMessage.Text = Resources.ReactionGameEnded;
+                this.buttonSubmit.Enabled = false;
+                break;
         }
     }
 }
