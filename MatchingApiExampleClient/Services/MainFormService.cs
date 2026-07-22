@@ -51,12 +51,12 @@ public class MainFormService : IDisposable
     /// <summary>
     /// ルーム一覧更新イベント。
     /// </summary>
-    public event EventHandler<FindRoomsReply> OnRoomsUpdated;
+    public event EventHandler<FindRoomsReply> RoomsUpdated;
 
     /// <summary>
     /// ルーム状態更新イベント。
     /// </summary>
-    public event EventHandler<GetRoomReply> OnRoomUpdated;
+    public event EventHandler<GetRoomReply> RoomUpdated;
 
     /// <summary>
     /// gRPCチャネル。
@@ -207,13 +207,13 @@ public class MainFormService : IDisposable
         {
             await foreach (var reply in call.ResponseStream.ReadAllAsync(this.roomsUpdatedSource.Token))
             {
-                this.OnRoomsUpdated?.Invoke(this, reply);
+                this.RoomsUpdated?.Invoke(this, reply);
             }
         }
         catch (RpcException e)
         {
             // 空のイベントを投げておく
-            this.OnRoomsUpdated?.Invoke(this, new FindRoomsReply());
+            this.RoomsUpdated?.Invoke(this, new FindRoomsReply());
             if (e.StatusCode != StatusCode.Cancelled)
             {
                 throw;
@@ -233,13 +233,13 @@ public class MainFormService : IDisposable
         {
             await foreach (var reply in call.ResponseStream.ReadAllAsync(this.roomUpdatedSource.Token))
             {
-                this.OnRoomUpdated?.Invoke(this, reply);
+                this.RoomUpdated?.Invoke(this, reply);
             }
         }
         catch (RpcException e)
         {
             // 空のイベントを投げておく
-            this.OnRoomUpdated?.Invoke(this, new GetRoomReply());
+            this.RoomUpdated?.Invoke(this, new GetRoomReply());
             if (e.StatusCode != StatusCode.Cancelled)
             {
                 throw;

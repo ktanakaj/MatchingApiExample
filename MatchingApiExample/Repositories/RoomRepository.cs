@@ -63,7 +63,7 @@ public class RoomRepository
     /// <summary>
     /// ルーム更新イベント。
     /// </summary>
-    public event EventHandler<Room>? OnUpdated;
+    public event EventHandler<Room>? Updated;
 
     /// <summary>
     /// 全ルームを取得する。
@@ -130,11 +130,11 @@ public class RoomRepository
         {
             // リポジトリ内の管理情報と同期させるためにイベントを登録する
             room = new Room(this.GenerateNumber(), maxPlayers);
-            room.OnUpdated += (sender, e) => this.OnRoomUpdated((Room)sender!, e);
+            room.Updated += (sender, e) => this.OnRoomUpdated((Room)sender!, e);
             this.rooms[room.No] = room;
         }
 
-        this.OnUpdated?.Invoke(this, room);
+        this.Updated?.Invoke(this, room);
         return room;
     }
 
@@ -285,6 +285,6 @@ public class RoomRepository
         }
 
         // イベントを伝播する
-        this.OnUpdated?.Invoke(this, room);
+        this.Updated?.Invoke(this, room);
     }
 }

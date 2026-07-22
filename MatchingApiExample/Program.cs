@@ -72,6 +72,7 @@ try
                 .WithScopedLifetime());
     builder.Services.AddSingleton<RoomRepository>();
     builder.Services.AddSingleton<GameRepository>();
+    builder.Services.AddScoped<ReactionGameService>();
 
     // 初期化したWebアプリにルートなどの設定を行う
     var app = builder.Build();

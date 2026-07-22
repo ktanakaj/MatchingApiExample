@@ -34,6 +34,11 @@ public class ReactionGame : IGame
     private const int MaxCueDelayMs = 3500;
 
     /// <summary>
+    /// 合図からタイムアウトまでの時間（ミリ秒）。
+    /// </summary>
+    private const int TimeoutMs = 5000;
+
+    /// <summary>
     /// ロックオブジェクト。
     /// </summary>
     private readonly object lockObj = new object();
@@ -75,14 +80,13 @@ public class ReactionGame : IGame
             throw new InvalidArgumentException($"Players must be greater than 1 (count={playerIds.Count})");
         }
 
-        // スタートは全Ready後（ScheduleSubmitableでランダム合図）
         this.PlayerIds = playerIds.ToImmutableList();
     }
 
     /// <summary>
     /// ゲームイベント。
     /// </summary>
-    public event EventHandler<GameEventArgs>? OnGameEvent;
+    public event EventHandler<GameEventArgs>? GameEvent;
 
     /// <summary>
     /// ゲームごとに一意なID。
@@ -131,11 +135,12 @@ public class ReactionGame : IGame
             }
 
             // 準備完了イベントを起こす
-            this.FireReadyEvent(playerId);
+            this.RaiseReadyEvent(playerId);
 
+            // 全員が準備完了したらゲーム開始
             if (this.AllReady())
             {
-                this.FireStartEvent();
+                this.RaiseStartEvent();
                 this.ScheduleSubmitable();
             }
         }
@@ -157,28 +162,19 @@ public class ReactionGame : IGame
                 throw new FailedPreconditionException($"Player ID={playerId} is not joined in Game ID={this.Id}");
             }
 
-            if (!this.submitableAt.HasValue || this.Disposed)
-            {
-                this.FireSubmittedEvent(playerId, ReactionGameResult.Ng, pressDate);
-                return;
-            }
-
+            // 既に押下済みの場合は無視
             if (this.submissions.ContainsKey(playerId))
             {
                 return;
             }
 
             this.submissions[playerId] = pressDate;
+            this.RaiseSubmittedEvent(playerId, pressDate);
 
-            if (this.winnerId == null)
+            // 最後の一人が押したらゲーム終了
+            if (this.submissions.Count >= this.PlayerIds.Count)
             {
-                this.winnerId = playerId;
-                this.FireSubmittedEvent(playerId, ReactionGameResult.Ok, pressDate);
-                this.FireEndEvent();
-            }
-            else
-            {
-                this.FireSubmittedEvent(playerId, ReactionGameResult.Ng, pressDate);
+                this.End();
             }
         }
     }
@@ -192,12 +188,12 @@ public class ReactionGame : IGame
         {
             if (!this.Disposed)
             {
-                this.FireAbortEvent();
+                this.RaiseAbortEvent();
             }
         }
 
-        // イベント後にイベントハンドラーも消しておく
-        this.OnGameEvent = null;
+        // イベントハンドラーも消しておく
+        this.GameEvent = null;
     }
 
     /// <summary>
@@ -234,6 +230,22 @@ public class ReactionGame : IGame
     }
 
     /// <summary>
+    /// ゲームを終了する。
+    /// </summary>
+    private void End()
+    {
+        lock (this.lockObj)
+        {
+            // 押下時間を比較して、勝者を判定する。合図後に一番最初に押した人が勝者
+            // ※ 全員合図前に押すなど、勝者は居ないこともあり得る。
+            var winner = this.events.Where(e => e.Type == ReactionGameEventType.Submitted && e.Date >= this.submitableAt)
+                .OrderBy(e => e.Date).FirstOrDefault();
+            this.winnerId = winner?.PlayerId;
+            this.RaiseEndEvent(this.winnerId, winner?.Date);
+        }
+    }
+
+    /// <summary>
     /// ランダム遅延後にSUBMITABLEを発火するスケジュール。
     /// </summary>
     private void ScheduleSubmitable()
@@ -247,7 +259,26 @@ public class ReactionGame : IGame
                 if (!this.Disposed && !this.submitableAt.HasValue)
                 {
                     this.submitableAt = DateTimeOffset.UtcNow;
-                    this.FireSubmitableEvent();
+                    this.RaiseSubmitableEvent();
+                    this.ScheduleEnd();
+                }
+            }
+        });
+    }
+
+    /// <summary>
+    /// 一定時間後にENDを発火するスケジュール。
+    /// </summary>
+    private void ScheduleEnd()
+    {
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(TimeoutMs);
+            lock (this.lockObj)
+            {
+                if (!this.Disposed && this.submitableAt.HasValue)
+                {
+                    this.End();
                 }
             }
         });
@@ -257,10 +288,10 @@ public class ReactionGame : IGame
     /// ゲーム開始イベントを発生させる。
     /// </summary>
     /// <returns>発生したイベント。</returns>
-    private GameEventArgs FireStartEvent()
+    private GameEventArgs RaiseStartEvent()
     {
         var e = new GameEventArgs(ReactionGameEventType.Start);
-        this.FireGameEvent(e);
+        this.RaiseGameEvent(e);
         return e;
     }
 
@@ -269,10 +300,10 @@ public class ReactionGame : IGame
     /// </summary>
     /// <param name="playerId">準備が完了したプレイヤーのID。</param>
     /// <returns>発生したイベント。</returns>
-    private GameEventArgs FireReadyEvent(int playerId)
+    private GameEventArgs RaiseReadyEvent(int playerId)
     {
         var e = new GameEventArgs(ReactionGameEventType.Ready) { PlayerId = playerId };
-        this.FireGameEvent(e);
+        this.RaiseGameEvent(e);
         return e;
     }
 
@@ -280,35 +311,36 @@ public class ReactionGame : IGame
     /// 押下開始イベントを発生させる。
     /// </summary>
     /// <returns>発生したイベント。</returns>
-    private GameEventArgs FireSubmitableEvent()
+    private GameEventArgs RaiseSubmitableEvent()
     {
         var e = new GameEventArgs(ReactionGameEventType.Submitable) { Date = this.submitableAt };
-        this.FireGameEvent(e);
+        this.RaiseGameEvent(e);
         return e;
     }
 
     /// <summary>
     /// 押下イベントを発生させる。
     /// </summary>
-    /// <param name="playerId">回答したプレイヤーのID。</param>
-    /// <param name="result">押下の結果。</param>
+    /// <param name="playerId">押下したプレイヤーのID。</param>
     /// <param name="pressDate">押下日時。</param>
     /// <returns>発生したイベント。</returns>
-    private GameEventArgs FireSubmittedEvent(int playerId, ReactionGameResult result, DateTimeOffset? pressDate = null)
+    private GameEventArgs RaiseSubmittedEvent(int playerId, DateTimeOffset pressDate)
     {
-        var e = new GameEventArgs(ReactionGameEventType.Submitted) { PlayerId = playerId, Result = result, Date = pressDate };
-        this.FireGameEvent(e);
+        var e = new GameEventArgs(ReactionGameEventType.Submitted) { PlayerId = playerId, Date = pressDate };
+        this.RaiseGameEvent(e);
         return e;
     }
 
     /// <summary>
     /// ゲーム終了イベントを発生させる。
     /// </summary>
+    /// <param name="playerId">勝利したプレイヤーのID。勝者無しはnull。</param>
+    /// <param name="pressDate">押下日時。勝者無しはnull。</param>
     /// <returns>発生したイベント。</returns>
-    private GameEventArgs FireEndEvent()
+    private GameEventArgs RaiseEndEvent(int? playerId, DateTimeOffset? pressDate)
     {
-        var e = new GameEventArgs(ReactionGameEventType.End);
-        this.FireGameEvent(e);
+        var e = new GameEventArgs(ReactionGameEventType.End) { PlayerId = playerId, Date = pressDate };
+        this.RaiseGameEvent(e);
         return e;
     }
 
@@ -316,10 +348,10 @@ public class ReactionGame : IGame
     /// ゲーム中止イベントを発生させる。
     /// </summary>
     /// <returns>発生したイベント。</returns>
-    private GameEventArgs FireAbortEvent()
+    private GameEventArgs RaiseAbortEvent()
     {
         var e = new GameEventArgs(ReactionGameEventType.Abort);
-        this.FireGameEvent(e);
+        this.RaiseGameEvent(e);
         return e;
     }
 
@@ -327,18 +359,18 @@ public class ReactionGame : IGame
     /// ゲームイベントを発生させる。
     /// </summary>
     /// <param name="e">発生させるイベント。nullの場合無視。</param>
-    private void FireGameEvent(GameEventArgs e)
+    private void RaiseGameEvent(GameEventArgs e)
     {
         // 発火させるだけでなく、履歴にも登録する
         if (e != null)
         {
             this.events.Add(e);
-            this.OnGameEvent?.Invoke(this, e);
+            this.GameEvent?.Invoke(this, e);
         }
     }
 
     /// <summary>
-    /// <see cref="OnGameEvent"/> のイベントパラメータクラス。
+    /// <see cref="GameEvent"/> のイベントパラメータクラス。
     /// </summary>
     public class GameEventArgs : EventArgs
     {
@@ -362,11 +394,6 @@ public class ReactionGame : IGame
         /// イベントが発生したプレイヤーのID。
         /// </summary>
         public int? PlayerId { get; set; }
-
-        /// <summary>
-        /// 結果 (OK/NG)。
-        /// </summary>
-        public ReactionGameResult? Result { get; set; }
 
         /// <summary>
         /// イベント関連日時（合図時刻や押下時刻）。

@@ -25,13 +25,6 @@ enum ReactionGameEventType {
   ABORT = 5;
 }
 
-// 押下結果列挙体。
-enum ReactionGameResult {
-  OK = 0;
-  NG = 1;
-  GAMEOVER = 2;
-}
-
 // ボタンを押すの引数。
 message SubmitRequest {
   // ボタン押下日時
@@ -46,6 +39,4 @@ message GameEventReply {
   int32 playerId = 2;
   // イベントに関連する日時。
   google.protobuf.Timestamp date = 3;
-  // 押下の結果。
-  ReactionGameResult result = 4;
 }

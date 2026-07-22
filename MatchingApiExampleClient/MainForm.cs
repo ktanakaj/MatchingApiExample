@@ -31,8 +31,8 @@ public partial class MainForm : Form
     public MainForm()
     {
         this.InitializeComponent();
-        this.service.OnRoomsUpdated += this.UpdateRooms;
-        this.service.OnRoomUpdated += this.UpdateRoom;
+        this.service.RoomsUpdated += this.UpdateRooms;
+        this.service.RoomUpdated += this.UpdateRoom;
     }
 
     /// <summary>

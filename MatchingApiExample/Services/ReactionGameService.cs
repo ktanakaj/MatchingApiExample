@@ -16,6 +16,7 @@ using Honememo.MatchingApiExample.Protos;
 using Honememo.MatchingApiExample.Repositories;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
+using Player = Honememo.MatchingApiExample.Entities.Player;
 using ReactionGame = Honememo.MatchingApiExample.Entities.ReactionGame;
 
 namespace Honememo.MatchingApiExample.Services;
@@ -27,6 +28,11 @@ namespace Honememo.MatchingApiExample.Services;
 [Authorize]
 public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
 {
+    /// <summary>
+    /// サービススコープファクトリ。
+    /// </summary>
+    private readonly IServiceScopeFactory serviceScopeFactory;
+
     /// <summary>
     /// ロガー。
     /// </summary>
@@ -48,22 +54,34 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
     private readonly RoomRepository roomRepository;
 
     /// <summary>
+    /// プレイヤーリポジトリ。
+    /// </summary>
+    private readonly PlayerRepository playerRepository;
+
+    /// <summary>
     /// 渡されたインスタンスを使用してサービスを生成する。
     /// </summary>
+    /// <param name="serviceScopeFactory">サービススコープファクトリ。</param>
     /// <param name="logger">ロガー。</param>
     /// <param name="mapper">Mapsterインスタンス。</param>
     /// <param name="gameRepository">ゲームリポジトリ。</param>
     /// <param name="roomRepository">ルームリポジトリ。</param>
-    public ReactionGameService(ILogger<ReactionGameService> logger, IMapper mapper, GameRepository gameRepository, RoomRepository roomRepository)
+    /// <param name="playerRepository">プレイヤーリポジトリ。</param>
+    public ReactionGameService(
+        IServiceScopeFactory serviceScopeFactory,
+        ILogger<ReactionGameService> logger,
+        IMapper mapper,
+        GameRepository gameRepository,
+        RoomRepository roomRepository,
+        PlayerRepository playerRepository)
     {
+        this.serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         this.gameRepository = gameRepository ?? throw new ArgumentNullException(nameof(gameRepository));
         this.roomRepository = roomRepository ?? throw new ArgumentNullException(nameof(roomRepository));
+        this.playerRepository = playerRepository ?? throw new ArgumentNullException(nameof(playerRepository));
     }
-
-    //// TODO: ゲーム終了時にゲームを破棄する
-    //// TODO: ゲーム終了時にプレイヤーのレーティングを更新する
 
     /// <summary>
     /// ゲームを準備完了にする。
@@ -90,6 +108,9 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
                 game = new ReactionGame(room.PlayerIds);
                 this.gameRepository.AddGame(game);
                 room.GameId = game.Id;
+
+                // ゲーム終了時の処理を登録する
+                game.GameEvent += this.OnGameEnded;
             }
             else
             {
@@ -137,13 +158,13 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
                 await responseStream.WriteAsync(this.mapper.Map<GameEventReply>(e));
             }
         };
-        game.OnGameEvent += f;
+        game.GameEvent += f;
         while (!context.CancellationToken.IsCancellationRequested)
         {
             await Task.Delay(500);
         }
 
-        game.OnGameEvent -= f;
+        game.GameEvent -= f;
     }
 
     /// <summary>
@@ -195,5 +216,81 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
         }
 
         return room;
+    }
+
+    /// <summary>
+    /// ゲーム終了時の処理。
+    /// </summary>
+    /// <param name="sender">ゲームオブジェクト。</param>
+    /// <param name="e">ゲームイベント引数。</param>
+    private async void OnGameEnded(object? sender, ReactionGame.GameEventArgs e)
+    {
+        // 他のイベントも来るので、ゲーム終了イベント以外は無視する
+        if (e.Type != ReactionGameEventType.End)
+        {
+            return;
+        }
+
+        // イベント到達時はインスタンスは破棄されている可能性があるので、スコープを作ってサービスを再取得して処理
+        try
+        {
+            using var scope = this.serviceScopeFactory.CreateScope();
+            await scope.ServiceProvider.GetRequiredService<ReactionGameService>().OnGameEndedImpl((ReactionGame)sender!);
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogWarning(ex, "Failed to handle game ended event.");
+        }
+    }
+
+    /// <summary>
+    /// ゲーム終了時の処理の実装。
+    /// </summary>
+    /// <param name="game">ゲームオブジェクト。</param>
+    /// <returns>処理状態。</returns>
+    private async Task OnGameEndedImpl(ReactionGame game)
+    {
+        // ゲームに参加していたメンバーのレーティングを更新
+        await this.UpdateRatings(game);
+
+        // ゲームを削除して、ルームを未プレイ中の状態に戻す
+        if (this.roomRepository.TryGetRoomByPlayerId(game.PlayerIds[0], out var room) && room.GameId == game.Id)
+        {
+            room.GameId = null;
+        }
+
+        this.gameRepository.RemoveGame(game.Id);
+    }
+
+    /// <summary>
+    /// ゲーム終了時のレーティング更新。
+    /// </summary>
+    /// <param name="game">終了したゲーム。</param>
+    private async Task UpdateRatings(ReactionGame game)
+    {
+        // 勝者のレーティングを上げて、敗者のレーティングを下げる
+        // TODO: 計算式は現状てきとう。イロレーティングとかグリコレーティングとかいろいろアルゴリズムがあるので、本当はちゃんとやるべき。
+        //       それだとたぶん引き分けもレーティングが変わる。
+        if (game.WinnerId == null)
+        {
+            return;
+        }
+
+        var winner = game.WinnerId.Value;
+        var players = new List<Player>();
+        foreach (var playerId in game.PlayerIds)
+        {
+            var player = await this.playerRepository.FindOrFail(playerId);
+            ushort newRating = playerId == winner
+                ? (ushort)Math.Min(ushort.MaxValue, player.Rating + 12)
+                : (ushort)Math.Max(0, player.Rating - 8);
+            if (player.Rating != newRating)
+            {
+                player.Rating = newRating;
+                players.Add(player);
+            }
+        }
+
+        await this.playerRepository.UpdateMany(players);
     }
 }

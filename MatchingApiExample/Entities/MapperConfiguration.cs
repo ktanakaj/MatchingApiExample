@@ -36,7 +36,6 @@ public class MapperConfiguration : IRegister
         config.NewConfig<ReactionGame.GameEventArgs, GameEventReply>()
             .Map(dest => dest.PlayerId, src => src.PlayerId ?? 0)
             .Map(dest => dest.Date, src => src.Date != null ? Timestamp.FromDateTimeOffset(src.Date.Value) : null)
-            .Map(dest => dest.Result, src => src.Result ?? ReactionGameResult.Ok)
             .IgnoreNullValues(true);
     }
 }

@@ -55,7 +55,7 @@ public class ReactionGameFormService : IDisposable
     /// <summary>
     /// ゲームイベント。
     /// </summary>
-    public event EventHandler<GameEventReply> OnGameEvent;
+    public event EventHandler<GameEventReply> GameEvent;
 
     /// <summary>
     /// 入室中のルームの状態を取得する。
@@ -79,7 +79,7 @@ public class ReactionGameFormService : IDisposable
             this.readySource = new CancellationTokenSource();
             await foreach (var reply in call.ResponseStream.ReadAllAsync(this.readySource.Token))
             {
-                this.OnGameEvent?.Invoke(this, reply);
+                this.GameEvent?.Invoke(this, reply);
             }
         }
         catch (RpcException ex)

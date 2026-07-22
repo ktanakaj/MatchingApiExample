@@ -33,7 +33,7 @@ public partial class ReactionGameForm : Form
     {
         this.InitializeComponent();
         this.service = new ReactionGameFormService(channel);
-        this.service.OnGameEvent += this.DoGameEvent;
+        this.service.GameEvent += this.DoGameEvent;
     }
 
     /// <summary>
@@ -85,7 +85,7 @@ public partial class ReactionGameForm : Form
     {
         // TODO: ちゃんとしたログを出す
         var dateSuffix = e.Date != null ? $", Date={e.Date.ToDateTimeOffset():HH:mm:ss.fff}" : string.Empty;
-        this.textBoxLog.Text += string.Format("Type={0}, PlayerId={1}, Result={2}{3}", e.Type, e.PlayerId, e.Result, dateSuffix) + Environment.NewLine;
+        this.textBoxLog.Text += string.Format("Type={0}, PlayerId={1}, Result={2}", e.Type, e.PlayerId, dateSuffix) + Environment.NewLine;
 
         switch (e.Type)
         {
@@ -102,13 +102,9 @@ public partial class ReactionGameForm : Form
                 break;
             case ReactionGameEventType.Submitted:
                 this.buttonSubmit.Enabled = false;
-                if (e.Result == ReactionGameResult.Ok)
-                {
-                    this.labelMessage.Text = (e.PlayerId == Settings.Default.PlayerId)
-                                            ? Resources.ReactionGameYouWin
-                                            : string.Format(Resources.ReactionGamePlayerWon, e.PlayerId);
-                }
-
+                this.labelMessage.Text = (e.PlayerId == Settings.Default.PlayerId)
+                                        ? Resources.ReactionGameYouWin
+                                        : string.Format(Resources.ReactionGamePlayerWon, e.PlayerId);
                 break;
             case ReactionGameEventType.End:
             case ReactionGameEventType.Abort:
@@ -116,5 +112,15 @@ public partial class ReactionGameForm : Form
                 this.buttonSubmit.Enabled = false;
                 break;
         }
+    }
+
+    /// <summary>
+    /// ログを追加する。
+    /// </summary>
+    /// <param name="message">ログメッセージ。</param>
+    /// <param name="date">ログ日時。</param>
+    private void AddLog(string message, DateTimeOffset date)
+    {
+        this.textBoxLog.Text += string.Format("[{0:HH:mm:ss.fff}] {1}", date, message) + Environment.NewLine;
     }
 }

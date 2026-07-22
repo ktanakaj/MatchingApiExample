@@ -230,13 +230,13 @@ public class MatchingService : Matching.MatchingBase
                 await responseStream.WriteAsync(await this.FindRooms(new Empty(), context));
             }
         };
-        this.roomRepository.OnUpdated += f;
+        this.roomRepository.Updated += f;
         while (!context.CancellationToken.IsCancellationRequested)
         {
             await Task.Delay(500);
         }
 
-        this.roomRepository.OnUpdated -= f;
+        this.roomRepository.Updated -= f;
     }
 
     /// <summary>
@@ -281,13 +281,13 @@ public class MatchingService : Matching.MatchingBase
                 await responseStream.WriteAsync(await this.MakeRoomStatus(room));
             }
         };
-        room.OnUpdated += f;
+        room.Updated += f;
         while (!context.CancellationToken.IsCancellationRequested)
         {
             await Task.Delay(500);
         }
 
-        room.OnUpdated -= f;
+        room.Updated -= f;
     }
 
     /// <summary>

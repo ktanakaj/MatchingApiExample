@@ -50,7 +50,7 @@ public class Room : IDisposable
     /// <summary>
     /// ルーム更新イベント。
     /// </summary>
-    public event EventHandler<UpdatedEventArgs>? OnUpdated;
+    public event EventHandler<UpdatedEventArgs>? Updated;
 
     /// <summary>
     /// ルーム番号。
@@ -95,7 +95,7 @@ public class Room : IDisposable
 
             var e = new UpdatedEventArgs(this);
             this.gameId = value;
-            this.FireUpdated(e);
+            this.RaiseUpdated(e);
         }
     }
 
@@ -137,7 +137,7 @@ public class Room : IDisposable
             this.UpdateRating((int)player.Rating);
         }
 
-        this.FireUpdated(e);
+        this.RaiseUpdated(e);
     }
 
     /// <summary>
@@ -161,7 +161,7 @@ public class Room : IDisposable
             this.UpdateRating((int)-player.Rating);
         }
 
-        this.FireUpdated(e);
+        this.RaiseUpdated(e);
         return true;
     }
 
@@ -193,8 +193,8 @@ public class Room : IDisposable
         }
 
         // イベント後にイベントハンドラーも消しておく
-        this.FireUpdated(e);
-        this.OnUpdated = null;
+        this.RaiseUpdated(e);
+        this.Updated = null;
     }
 
     /// <summary>
@@ -213,11 +213,11 @@ public class Room : IDisposable
     /// ルーム更新イベントを発生させる。
     /// </summary>
     /// <param name="e">発生させるイベント。nullの場合無視。</param>
-    private void FireUpdated(UpdatedEventArgs? e)
+    private void RaiseUpdated(UpdatedEventArgs? e)
     {
         if (e != null)
         {
-            this.OnUpdated?.Invoke(this, e);
+            this.Updated?.Invoke(this, e);
         }
     }
 
@@ -252,7 +252,7 @@ public class Room : IDisposable
     }
 
     /// <summary>
-    /// <see cref="OnUpdated"/> のイベントパラメータクラス。
+    /// <see cref="Updated"/> のイベントパラメータクラス。
     /// </summary>
     public class UpdatedEventArgs : EventArgs
     {

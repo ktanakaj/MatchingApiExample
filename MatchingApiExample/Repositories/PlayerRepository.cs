@@ -105,6 +105,22 @@ public class PlayerRepository
     }
 
     /// <summary>
+    /// プレイヤーを一括で更新する。
+    /// </summary>
+    /// <param name="players">プレイヤーのシーケンス。</param>
+    /// <returns>更新したプレイヤーのリスト。</returns>
+    public async Task<IList<Player>> UpdateMany(IEnumerable<Player> players)
+    {
+        foreach (var player in players)
+        {
+            this.context.Entry(player).State = EntityState.Modified;
+        }
+
+        await this.context.SaveChangesAsync();
+        return players.ToList();
+    }
+
+    /// <summary>
     /// プレイヤーを削除する。
     /// </summary>
     /// <param name="id">プレイヤーID。</param>
