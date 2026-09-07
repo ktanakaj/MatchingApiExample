@@ -123,6 +123,14 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
         var t = this.WatchGame(game, responseStream, context);
         game.Ready(context.GetPlayerId());
         await t;
+
+        // ゲームイベントの監視が終了したら（誰かが抜けた）、ゲームを削除して、ルームを未プレイ中の状態に戻す
+        if (room.GameId == game.Id)
+        {
+            room.GameId = null;
+        }
+
+        this.gameRepository.RemoveGame(game.Id);
     }
 
     /// <summary>
@@ -159,7 +167,7 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
             }
         };
         game.GameEvent += f;
-        while (!context.CancellationToken.IsCancellationRequested)
+        while (!context.CancellationToken.IsCancellationRequested && room.GameId == game.Id)
         {
             await Task.Delay(500);
         }
@@ -234,32 +242,14 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
         // イベント到達時はインスタンスは破棄されている可能性があるので、スコープを作ってサービスを再取得して処理
         try
         {
+            // ゲームに参加していたメンバーのレーティングを更新
             using var scope = this.serviceScopeFactory.CreateScope();
-            await scope.ServiceProvider.GetRequiredService<ReactionGameService>().OnGameEndedImpl((ReactionGame)sender!);
+            await scope.ServiceProvider.GetRequiredService<ReactionGameService>().UpdateRatings((ReactionGame)sender!);
         }
         catch (Exception ex)
         {
             this.logger.LogWarning(ex, "Failed to handle game ended event.");
         }
-    }
-
-    /// <summary>
-    /// ゲーム終了時の処理の実装。
-    /// </summary>
-    /// <param name="game">ゲームオブジェクト。</param>
-    /// <returns>処理状態。</returns>
-    private async Task OnGameEndedImpl(ReactionGame game)
-    {
-        // ゲームに参加していたメンバーのレーティングを更新
-        await this.UpdateRatings(game);
-
-        // ゲームを削除して、ルームを未プレイ中の状態に戻す
-        if (this.roomRepository.TryGetRoomByPlayerId(game.PlayerIds[0], out var room) && room.GameId == game.Id)
-        {
-            room.GameId = null;
-        }
-
-        this.gameRepository.RemoveGame(game.Id);
     }
 
     /// <summary>

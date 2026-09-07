@@ -34,6 +34,8 @@
             labelLog = new Label();
             labelMessage = new Label();
             buttonSubmit = new Button();
+            buttonReady = new Button();
+            buttonClose = new Button();
             SuspendLayout();
             // 
             // labelMemberList
@@ -101,11 +103,43 @@
             buttonSubmit.UseVisualStyleBackColor = true;
             buttonSubmit.Click += ButtonSubmit_Click;
             // 
+            // buttonReady
+            // 
+            buttonReady.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            buttonReady.AutoSize = true;
+            buttonReady.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            buttonReady.Font = new Font("Yu Gothic UI", 12F);
+            buttonReady.Location = new Point(179, 370);
+            buttonReady.Name = "buttonReady";
+            buttonReady.Size = new Size(108, 31);
+            buttonReady.TabIndex = 2;
+            buttonReady.Text = "もう一度プレイ";
+            buttonReady.UseVisualStyleBackColor = true;
+            buttonReady.Visible = false;
+            buttonReady.Click += ButtonReady_Click;
+            // 
+            // buttonClose
+            // 
+            buttonClose.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            buttonClose.AutoSize = true;
+            buttonClose.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            buttonClose.Font = new Font("Yu Gothic UI", 12F);
+            buttonClose.Location = new Point(203, 370);
+            buttonClose.Name = "buttonClose";
+            buttonClose.Size = new Size(59, 31);
+            buttonClose.TabIndex = 2;
+            buttonClose.Text = "閉じる";
+            buttonClose.UseVisualStyleBackColor = true;
+            buttonClose.Visible = false;
+            buttonClose.Click += ButtonClose_Click;
+            // 
             // ReactionGameForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(464, 421);
+            Controls.Add(buttonClose);
+            Controls.Add(buttonReady);
             Controls.Add(buttonSubmit);
             Controls.Add(labelMessage);
             Controls.Add(labelLog);
@@ -133,5 +167,7 @@
         private System.Windows.Forms.Label labelLog;
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.Button buttonSubmit;
+        private Button buttonReady;
+        private Button buttonClose;
     }
 }

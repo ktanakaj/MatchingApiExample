@@ -70,6 +70,15 @@ namespace Honememo.MatchingApiExample.Client.Properties {
         }
         
         /// <summary>
+        ///   ゲームが中断されました に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGameAbort {
+            get {
+                return ResourceManager.GetString("ReactionGameAbort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   よーい… に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string ReactionGameCue {
@@ -79,16 +88,16 @@ namespace Honememo.MatchingApiExample.Client.Properties {
         }
         
         /// <summary>
-        ///   ゲーム終了 に類似しているローカライズされた文字列を検索します。
+        ///   勝者無し に類似しているローカライズされた文字列を検索します。
         /// </summary>
-        internal static string ReactionGameEnded {
+        internal static string ReactionGameDraw {
             get {
-                return ResourceManager.GetString("ReactionGameEnded", resourceCulture);
+                return ResourceManager.GetString("ReactionGameDraw", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   プレイヤー{0} の勝ち！ に類似しているローカライズされた文字列を検索します。
+        ///   {0}さんの勝ち！ に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string ReactionGamePlayerWon {
             get {
@@ -106,6 +115,24 @@ namespace Honememo.MatchingApiExample.Client.Properties {
         }
         
         /// <summary>
+        ///   {0}さんがゲームを開始しました。 に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGameReady {
+            get {
+                return ResourceManager.GetString("ReactionGameReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   早かったのは… に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGameResultWait {
+            get {
+                return ResourceManager.GetString("ReactionGameResultWait", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   準備完了！もうすぐゲームが始まります。 に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string ReactionGameStarting {
@@ -115,7 +142,16 @@ namespace Honememo.MatchingApiExample.Client.Properties {
         }
         
         /// <summary>
-        ///   他のプレイヤーの入室を待っています… に類似しているローカライズされた文字列を検索します。
+        ///   {0}さんが押下！ に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string ReactionGameSubmitted {
+            get {
+                return ResourceManager.GetString("ReactionGameSubmitted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   プレイヤーの開始を待っています… に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string ReactionGameWaiting {
             get {
