@@ -123,6 +123,14 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
         var t = this.WatchGame(game, responseStream, context);
         game.Ready(context.GetPlayerId());
         await t;
+
+        // ゲームイベントの監視が終了したら（誰かが抜けた）、ゲームを削除して、ルームを未プレイ中の状態に戻す
+        if (room.GameId == game.Id)
+        {
+            room.GameId = null;
+        }
+
+        this.gameRepository.RemoveGame(game.Id);
     }
 
     /// <summary>
@@ -159,7 +167,7 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
             }
         };
         game.GameEvent += f;
-        while (!context.CancellationToken.IsCancellationRequested)
+        while (!context.CancellationToken.IsCancellationRequested && room.GameId == game.Id)
         {
             await Task.Delay(500);
         }
