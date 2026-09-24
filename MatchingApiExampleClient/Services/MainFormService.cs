@@ -145,10 +145,18 @@ public class MainFormService : IDisposable
     /// </summary>
     /// <param name="id">プレイヤーID。</param>
     /// <param name="token">端末トークン。</param>
-    /// <returns>プレイヤー名, レーティング値。</returns>
-    public async Task<(string Name, uint Rating)> SignIn(int id, string token)
+    /// <returns>処理状態。</returns>
+    public async Task SignIn(int id, string token)
     {
         await this.playerService.SignInAsync(new SignInRequest { Id = id, Token = token });
+    }
+
+    /// <summary>
+    /// プレイヤー情報を取得する。
+    /// </summary>
+    /// <returns>プレイヤー名, レーティング値。</returns>
+    public async Task<(string Name, uint Rating)> FindMe()
+    {
         var res = await this.playerService.FindMeAsync(new Empty());
         return (res.Name, res.Rating);
     }

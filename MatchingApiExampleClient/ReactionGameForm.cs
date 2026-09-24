@@ -123,10 +123,10 @@ public partial class ReactionGameForm : Form
                 this.labelMessage.Text = Resources.ReactionGameStarting;
                 this.buttonReady.Visible = false;
                 this.buttonSubmit.Visible = true;
+                this.buttonSubmit.Enabled = true;
                 break;
             case ReactionGameEventType.Submitable:
                 this.labelMessage.Text = Resources.ReactionGamePressNow;
-                this.buttonSubmit.Enabled = true;
                 break;
             case ReactionGameEventType.Submitted:
                 if (e.PlayerId == Settings.Default.PlayerId)

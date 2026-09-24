@@ -110,7 +110,8 @@ public partial class MainForm : Form
                 }
                 else
                 {
-                    var (name, rating) = await this.service.SignIn(Settings.Default.PlayerId, Settings.Default.Token);
+                    await this.service.SignIn(Settings.Default.PlayerId, Settings.Default.Token);
+                    var (name, rating) = await this.service.FindMe();
                     this.textBoxPlayerName.Text = name;
                     this.textBoxRating.Text = rating.ToString();
                 }
@@ -250,12 +251,15 @@ public partial class MainForm : Form
     /// </summary>
     /// <param name="sender">イベント発生元インスタンス。</param>
     /// <param name="e">イベントパラメータ。</param>
-    private void ButtonReactionGame_Click(object sender, EventArgs e)
+    private async void ButtonReactionGame_Click(object sender, EventArgs e)
     {
-        using (var form = new ReactionGameForm(this.service.Channel))
-        {
-            form.ShowDialog();
-        }
+        // 早押しゲーム画面をモーダル表示する
+        using var form = new ReactionGameForm(this.service.Channel);
+        form.ShowDialog();
+
+        // 早押しゲーム画面を閉じた後に、レーティング値を再取得する
+        var (name, rating) = await this.service.FindMe();
+        this.textBoxRating.Text = rating.ToString();
     }
 
     /// <summary>
