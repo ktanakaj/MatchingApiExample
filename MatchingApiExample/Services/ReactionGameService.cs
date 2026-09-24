@@ -274,31 +274,43 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
     /// ゲーム終了時のレーティング更新。
     /// </summary>
     /// <param name="game">終了したゲーム。</param>
+    /// <returns>処理状態。</returns>
+    /// <exception cref="InvalidArgumentException">勝者が参加者に含まれない場合。</exception>
     private async Task UpdateRatings(ReactionGame game)
     {
-        // 勝者のレーティングを上げて、敗者のレーティングを下げる
-        // TODO: 計算式は現状てきとう。イロレーティングとかグリコレーティングとかいろいろアルゴリズムがあるので、本当はちゃんとやるべき。
-        //       それだとたぶん引き分けもレーティングが変わる。
-        if (game.WinnerId == null)
-        {
-            return;
-        }
-
-        var winner = game.WinnerId.Value;
+        // Findは名前順に並び替えるため、参加順のまま1件ずつ取得する
         var players = new List<Player>();
         foreach (var playerId in game.PlayerIds)
         {
-            var player = await this.playerRepository.FindOrFail(playerId);
-            ushort newRating = playerId == winner
-                ? (ushort)Math.Min(ushort.MaxValue, player.Rating + 12)
-                : (ushort)Math.Max(0, player.Rating - 8);
-            if (player.Rating != newRating)
+            players.Add(await this.playerRepository.FindOrFail(playerId));
+        }
+
+        int? winnerIndex = null;
+        if (game.WinnerId is int winnerId)
+        {
+            winnerIndex = players.FindIndex(p => p.Id == winnerId);
+            if (winnerIndex < 0)
             {
-                player.Rating = newRating;
-                players.Add(player);
+                throw new InvalidArgumentException($"Winner ID={winnerId} is not joined in Game ID={game.Id}");
             }
         }
 
-        await this.playerRepository.UpdateMany(players);
+        var newRatings = EloRating.Calculate(players.Select(p => p.Rating).ToArray(), winnerIndex);
+        var updated = new List<Player>();
+        for (int i = 0; i < players.Count; i++)
+        {
+            if (players[i].Rating == newRatings[i])
+            {
+                continue;
+            }
+
+            players[i].Rating = newRatings[i];
+            updated.Add(players[i]);
+        }
+
+        if (updated.Count > 0)
+        {
+            await this.playerRepository.UpdateMany(updated);
+        }
     }
 }
