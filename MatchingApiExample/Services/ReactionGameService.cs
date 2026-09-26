@@ -281,7 +281,7 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
     private async Task UpdateRatings(ReactionGame game)
     {
         var playerIds = game.PlayerIds;
-        var players = (await this.playerRepository.Find(playerIds)).ToList();
+        var players = (await this.playerRepository.FindMany(playerIds)).ToList();
         if (players.Count != playerIds.Count)
         {
             var missingId = playerIds.First(id => players.All(p => p.Id != id));
@@ -311,9 +311,6 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
             updated.Add(players[i]);
         }
 
-        if (updated.Count > 0)
-        {
-            await this.playerRepository.UpdateMany(updated);
-        }
+        await this.playerRepository.UpdateMany(updated);
     }
 }

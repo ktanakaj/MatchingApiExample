@@ -36,30 +36,10 @@ public class PlayerRepository
     /// <summary>
     /// プレイヤーを全て取得する。
     /// </summary>
-    /// <returns>プレイヤー。</returns>
+    /// <returns>プレイヤーのリスト。</returns>
     public async Task<IList<Player>> FindAll()
     {
         return await this.context.Players.OrderBy(b => b.Name).ThenBy(b => b.Id).ToListAsync();
-    }
-
-    /// <summary>
-    /// プレイヤーIDでプレイヤーを取得する。
-    /// </summary>
-    /// <param name="ids">プレイヤーID。</param>
-    /// <returns>指定されたIDの順に並べたプレイヤー。存在しないIDは含めない。</returns>
-    public async Task<IList<Player>> Find(ICollection<int> ids)
-    {
-        var found = await this.context.Players.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
-        var ordered = new List<Player>();
-        foreach (var id in ids)
-        {
-            if (found.TryGetValue(id, out var player))
-            {
-                ordered.Add(player);
-            }
-        }
-
-        return ordered;
     }
 
     /// <summary>
@@ -87,6 +67,26 @@ public class PlayerRepository
         }
 
         return player;
+    }
+
+    /// <summary>
+    /// プレイヤーIDでプレイヤーを一括取得する。
+    /// </summary>
+    /// <param name="ids">プレイヤーIDリスト。</param>
+    /// <returns>プレイヤーのリスト。引数の並び順を保持する。</returns>
+    public async Task<IList<Player>> FindMany(ICollection<int> ids)
+    {
+        var found = await this.context.Players.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
+        var ordered = new List<Player>();
+        foreach (var id in ids)
+        {
+            if (found.TryGetValue(id, out var player))
+            {
+                ordered.Add(player);
+            }
+        }
+
+        return ordered;
     }
 
     /// <summary>
@@ -121,13 +121,18 @@ public class PlayerRepository
     /// <returns>更新したプレイヤーのリスト。</returns>
     public async Task<IList<Player>> UpdateMany(IEnumerable<Player> players)
     {
-        foreach (var player in players)
+        var playerList = players.ToList();
+        if (playerList.Count > 0)
         {
-            this.context.Entry(player).State = EntityState.Modified;
+            foreach (var player in playerList)
+            {
+                this.context.Entry(player).State = EntityState.Modified;
+            }
+
+            await this.context.SaveChangesAsync();
         }
 
-        await this.context.SaveChangesAsync();
-        return players.ToList();
+        return playerList;
     }
 
     /// <summary>
