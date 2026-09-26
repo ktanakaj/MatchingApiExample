@@ -8,7 +8,7 @@
 //      Koichi Tanaka</author>
 // ================================================================================================
 
-namespace Honememo.MatchingApiExample.Services;
+namespace Honememo.MatchingApiExample.Utils;
 
 /// <summary>
 /// 多人数のEloレーティングを計算するクラス。

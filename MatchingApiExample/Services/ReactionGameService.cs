@@ -14,6 +14,7 @@ using Honememo.MatchingApiExample.Entities;
 using Honememo.MatchingApiExample.Exceptions;
 using Honememo.MatchingApiExample.Protos;
 using Honememo.MatchingApiExample.Repositories;
+using Honememo.MatchingApiExample.Utils;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Player = Honememo.MatchingApiExample.Entities.Player;
@@ -276,13 +277,15 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
     /// <param name="game">終了したゲーム。</param>
     /// <returns>処理状態。</returns>
     /// <exception cref="InvalidArgumentException">勝者が参加者に含まれない場合。</exception>
+    /// <exception cref="NotFoundException">参加者が見つからない場合。</exception>
     private async Task UpdateRatings(ReactionGame game)
     {
-        // Findは名前順に並び替えるため、参加順のまま1件ずつ取得する
-        var players = new List<Player>();
-        foreach (var playerId in game.PlayerIds)
+        var playerIds = game.PlayerIds;
+        var players = (await this.playerRepository.Find(playerIds)).ToList();
+        if (players.Count != playerIds.Count)
         {
-            players.Add(await this.playerRepository.FindOrFail(playerId));
+            var missingId = playerIds.First(id => players.All(p => p.Id != id));
+            throw new NotFoundException($"id={missingId} is not found");
         }
 
         int? winnerIndex = null;
