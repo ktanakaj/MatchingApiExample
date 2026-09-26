@@ -14,6 +14,7 @@ using Honememo.MatchingApiExample.Entities;
 using Honememo.MatchingApiExample.Exceptions;
 using Honememo.MatchingApiExample.Protos;
 using Honememo.MatchingApiExample.Repositories;
+using Honememo.MatchingApiExample.Utils;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Player = Honememo.MatchingApiExample.Entities.Player;
@@ -274,31 +275,45 @@ public class ReactionGameService : Protos.ReactionGame.ReactionGameBase
     /// ゲーム終了時のレーティング更新。
     /// </summary>
     /// <param name="game">終了したゲーム。</param>
+    /// <returns>処理状態。</returns>
+    /// <exception cref="InvalidArgumentException">勝者が参加者に含まれない場合。</exception>
+    /// <exception cref="NotFoundException">参加者が見つからない場合。</exception>
     private async Task UpdateRatings(ReactionGame game)
     {
-        // 勝者のレーティングを上げて、敗者のレーティングを下げる
-        // TODO: 計算式は現状てきとう。イロレーティングとかグリコレーティングとかいろいろアルゴリズムがあるので、本当はちゃんとやるべき。
-        //       それだとたぶん引き分けもレーティングが変わる。
-        if (game.WinnerId == null)
+        var playerIds = game.PlayerIds;
+        var players = (await this.playerRepository.Find(playerIds)).ToList();
+        if (players.Count != playerIds.Count)
         {
-            return;
+            var missingId = playerIds.First(id => players.All(p => p.Id != id));
+            throw new NotFoundException($"id={missingId} is not found");
         }
 
-        var winner = game.WinnerId.Value;
-        var players = new List<Player>();
-        foreach (var playerId in game.PlayerIds)
+        int? winnerIndex = null;
+        if (game.WinnerId is int winnerId)
         {
-            var player = await this.playerRepository.FindOrFail(playerId);
-            ushort newRating = playerId == winner
-                ? (ushort)Math.Min(ushort.MaxValue, player.Rating + 12)
-                : (ushort)Math.Max(0, player.Rating - 8);
-            if (player.Rating != newRating)
+            winnerIndex = players.FindIndex(p => p.Id == winnerId);
+            if (winnerIndex < 0)
             {
-                player.Rating = newRating;
-                players.Add(player);
+                throw new InvalidArgumentException($"Winner ID={winnerId} is not joined in Game ID={game.Id}");
             }
         }
 
-        await this.playerRepository.UpdateMany(players);
+        var newRatings = EloRating.Calculate(players.Select(p => p.Rating).ToArray(), winnerIndex);
+        var updated = new List<Player>();
+        for (int i = 0; i < players.Count; i++)
+        {
+            if (players[i].Rating == newRatings[i])
+            {
+                continue;
+            }
+
+            players[i].Rating = newRatings[i];
+            updated.Add(players[i]);
+        }
+
+        if (updated.Count > 0)
+        {
+            await this.playerRepository.UpdateMany(updated);
+        }
     }
 }

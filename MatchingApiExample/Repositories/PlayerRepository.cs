@@ -46,10 +46,20 @@ public class PlayerRepository
     /// プレイヤーIDでプレイヤーを取得する。
     /// </summary>
     /// <param name="ids">プレイヤーID。</param>
-    /// <returns>プレイヤー。</returns>
+    /// <returns>指定されたIDの順に並べたプレイヤー。存在しないIDは含めない。</returns>
     public async Task<IList<Player>> Find(ICollection<int> ids)
     {
-        return await this.context.Players.Where(p => ids.Contains(p.Id)).OrderBy(b => b.Name).ThenBy(b => b.Id).ToListAsync();
+        var found = await this.context.Players.Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
+        var ordered = new List<Player>();
+        foreach (var id in ids)
+        {
+            if (found.TryGetValue(id, out var player))
+            {
+                ordered.Add(player);
+            }
+        }
+
+        return ordered;
     }
 
     /// <summary>
