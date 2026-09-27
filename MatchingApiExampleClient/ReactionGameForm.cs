@@ -126,7 +126,12 @@ public partial class ReactionGameForm : Form
                 this.buttonSubmit.Enabled = true;
                 break;
             case ReactionGameEventType.Submitable:
-                this.labelMessage.Text = Resources.ReactionGamePressNow;
+                if (this.buttonSubmit.Enabled)
+                {
+                    this.labelMessage.Text = Resources.ReactionGamePressNow;
+                }
+
+                logMessage = Resources.ReactionGamePressNow;
                 break;
             case ReactionGameEventType.Submitted:
                 if (e.PlayerId == Settings.Default.PlayerId)
